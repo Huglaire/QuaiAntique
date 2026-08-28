@@ -21,6 +21,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./backend:/var/www/html
+      - vendor_data:/var/www/html/vendor
     depends_on:
       - database
 
@@ -37,7 +38,8 @@ services:
     volumes:
       - database_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
 volumes:
   database_data:
+  vendor_data:
