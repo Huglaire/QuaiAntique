@@ -7,9 +7,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -110,9 +112,25 @@ class User
         return $this;
     }
 
+    /**
+     * Returns the identifier used to authenticate the user.
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * Returns the user's roles.
+     *
+     * Every user has at least ROLE_USER.
+     */
     public function getRoles(): array
     {
-        return $this->roles;
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
     public function setRoles(array $roles): static
@@ -170,6 +188,9 @@ class User
         return $this;
     }
 
+    /**
+     * Returns the hashed password.
+     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -180,6 +201,14 @@ class User
         $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * Erases any temporary sensitive data.
+     */
+    public function eraseCredentials(): void
+    {
+        // Nothing to erase for now.
     }
 
     /**
@@ -203,7 +232,7 @@ class User
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // set the owning side to null (unless already changed)
+            // Set the owning side to null.
             if ($booking->getUser() === $this) {
                 $booking->setUser(null);
             }
