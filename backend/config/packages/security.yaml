@@ -1,0 +1,51 @@
+security:
+    # Configuration du système de hachage des mots de passe.
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    # Permet à Symfony de récupérer un utilisateur depuis la base de données.
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    firewalls:
+        # Les outils de développement et les fichiers statiques ne sont pas protégés.
+        dev:
+            pattern: ^/(_profiler|_wdt|assets|build)/
+            security: false
+
+        # Firewall utilisé pour vérifier les identifiants et générer le JWT.
+        login:
+            pattern: ^/api/login_check
+            stateless: true
+            provider: app_user_provider
+            json_login:
+                check_path: /api/login_check
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                remember_me: false
+
+        # Firewall utilisé pour authentifier les requêtes API avec un JWT.
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
+
+        # Firewall principal de l'application.
+        main:
+            lazy: true
+            provider: app_user_provider
+
+    # Définit les accès aux différentes parties de l'application.
+    access_control:
+        # L'inscription et la connexion sont accessibles sans authentification.
+        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
+
+        # Les autres routes de l'API nécessitent une authentification.
+        - { path: ^/api, roles: ROLE_USER }
