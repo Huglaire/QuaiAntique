@@ -113,7 +113,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Returns the identifier used to authenticate the user.
+     * Retourne l'identifiant utilisé pour authentifier l'utilisateur.
      */
     public function getUserIdentifier(): string
     {
@@ -121,9 +121,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Returns the user's roles.
+     * Retourne les rôles de l'utilisateur.
      *
-     * Every user has at least ROLE_USER.
+     * Chaque utilisateur possède au minimum le rôle ROLE_USER.
      */
     public function getRoles(): array
     {
@@ -189,7 +189,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Returns the hashed password.
+     * Retourne le mot de passe haché.
      */
     public function getPassword(): ?string
     {
@@ -204,11 +204,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Erases any temporary sensitive data.
+     * Efface les éventuelles données sensibles temporaires.
      */
     public function eraseCredentials(): void
     {
-        // Nothing to erase for now.
+        // Rien à effacer pour le moment.
     }
 
     /**
@@ -232,7 +232,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // Set the owning side to null.
+            // Met à jour le côté propriétaire de la relation.
             if ($booking->getUser() === $this) {
                 $booking->setUser(null);
             }
