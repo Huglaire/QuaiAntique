@@ -6,6 +6,7 @@ use App\Entity\Booking;
 use App\Entity\Restaurant;
 use App\Entity\User;
 use App\Repository\BookingRepository;
+use App\Repository\RestaurantRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -191,6 +192,191 @@ final class BookingController
                 ],
             ],
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    /**
+     * Retourne les créneaux disponibles pour une date donnée.
+     */
+    #[Route(
+        '/api/bookings/availability',
+        name: 'api_booking_availability',
+        methods: ['GET']
+    )]
+    public function availability(
+        Request $request,
+        RestaurantRepository $restaurantRepository,
+        BookingRepository $bookingRepository
+    ): JsonResponse {
+        // Récupère la date demandée dans l'URL.
+        $date = $request->query->get('date');
+
+        // Récupère le nombre de convives demandé.
+        $guestNumber = $request->query->get('guestNumber');
+
+        // Vérifie que les paramètres sont présents.
+        if (!$date || !$guestNumber) {
+            return new JsonResponse([
+                'message' => 'La date et le nombre de convives sont obligatoires.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que le nombre de convives est bien un entier positif.
+        if (
+            !ctype_digit((string) $guestNumber)
+            || (int) $guestNumber <= 0
+        ) {
+            return new JsonResponse([
+                'message' => 'Le nombre de convives doit être un entier positif.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $guestNumber = (int) $guestNumber;
+
+        // Vérifie le format de la date.
+        $bookingDate = \DateTime::createFromFormat(
+            'Y-m-d',
+            $date
+        );
+
+        if (
+            !$bookingDate
+            || $bookingDate->format('Y-m-d') !== $date
+        ) {
+            return new JsonResponse([
+                'message' => 'La date doit être au format YYYY-MM-DD.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que la date n'est pas passée.
+        $today = new \DateTime('today');
+
+        if ($bookingDate < $today) {
+            return new JsonResponse([
+                'message' => 'Impossible de consulter les disponibilités d’une date passée.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Le restaurant est actuellement unique dans l'application.
+        $restaurant = $restaurantRepository->findOneBy([]);
+
+        if (!$restaurant) {
+            return new JsonResponse([
+                'message' => 'Restaurant introuvable.',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        // Vérifie que le nombre de convives demandé
+        // ne dépasse pas la capacité maximale du restaurant.
+        if (
+            $restaurant->getMaxGuest() !== null
+            && $guestNumber > $restaurant->getMaxGuest()
+        ) {
+            return new JsonResponse([
+                'message' => sprintf(
+                    'Le nombre maximum de convives est de %d.',
+                    $restaurant->getMaxGuest()
+                ),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Le restaurant est fermé le lundi.
+        if ((int) $bookingDate->format('N') === 1) {
+            return new JsonResponse([
+                'date' => $date,
+                'lunch' => [],
+                'dinner' => [],
+            ], JsonResponse::HTTP_OK);
+        }
+
+        // Récupère les horaires des deux services.
+        $lunchOpeningTime = $restaurant->getLunchOpeningTime();
+        $dinnerOpeningTime = $restaurant->getDinnerOpeningTime();
+
+        // Prépare la réponse.
+        $response = [
+            'date' => $date,
+            'lunch' => [],
+            'dinner' => [],
+        ];
+
+        /*
+         * Vérification de la disponibilité du service du midi.
+         */
+        if ($lunchOpeningTime) {
+            // Chaque service dure deux heures.
+            $lunchClosingTime = (clone $lunchOpeningTime)
+                ->modify('+2 hours');
+
+            // Calcule le nombre de couverts déjà réservés
+            // pendant le service du midi.
+            $reservedGuests = $bookingRepository->countGuestsForService(
+                $bookingDate,
+                $lunchOpeningTime,
+                $lunchClosingTime
+            );
+
+            // Vérifie si la nouvelle réservation peut être ajoutée
+            // sans dépasser la capacité maximale du restaurant.
+            $serviceAvailable =
+                ($reservedGuests + $guestNumber)
+                <= $restaurant->getMaxGuest();
+
+            // Génère les créneaux de 15 minutes.
+            $slots = $this->generateTimeSlots(
+                $lunchOpeningTime,
+                $lunchClosingTime
+            );
+
+            // Ajoute chaque créneau à la réponse.
+            foreach ($slots as $slot) {
+                $response['lunch'][] = [
+                    'time' => $slot->format('H:i'),
+                    'available' => $serviceAvailable,
+                ];
+            }
+        }
+
+        /*
+         * Vérification de la disponibilité du service du soir.
+         */
+        if ($dinnerOpeningTime) {
+            // Chaque service dure deux heures.
+            $dinnerClosingTime = (clone $dinnerOpeningTime)
+                ->modify('+2 hours');
+
+            // Calcule le nombre de couverts déjà réservés
+            // pendant le service du soir.
+            $reservedGuests = $bookingRepository->countGuestsForService(
+                $bookingDate,
+                $dinnerOpeningTime,
+                $dinnerClosingTime
+            );
+
+            // Vérifie si la nouvelle réservation peut être ajoutée
+            // sans dépasser la capacité maximale du restaurant.
+            $serviceAvailable =
+                ($reservedGuests + $guestNumber)
+                <= $restaurant->getMaxGuest();
+
+            // Génère les créneaux de 15 minutes.
+            $slots = $this->generateTimeSlots(
+                $dinnerOpeningTime,
+                $dinnerClosingTime
+            );
+
+            // Ajoute chaque créneau à la réponse.
+            foreach ($slots as $slot) {
+                $response['dinner'][] = [
+                    'time' => $slot->format('H:i'),
+                    'available' => $serviceAvailable,
+                ];
+            }
+        }
+
+        return new JsonResponse(
+            $response,
+            JsonResponse::HTTP_OK
+        );
     }
 
     /**
