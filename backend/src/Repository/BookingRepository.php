@@ -51,4 +51,25 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Retourne le nombre total de couverts réservés
+     * pour une date et une plage horaire données.
+     */
+    public function countGuestsForService(
+        \DateTimeInterface $bookingDate,
+        \DateTimeInterface $serviceOpeningTime,
+        \DateTimeInterface $serviceClosingTime
+    ): int {
+        return (int) $this->createQueryBuilder('b')
+            ->select('COALESCE(SUM(b.guestNumber), 0)')
+            ->andWhere('b.bookingDate = :bookingDate')
+            ->andWhere('b.bookingTime >= :serviceOpeningTime')
+            ->andWhere('b.bookingTime <= :serviceClosingTime')
+            ->setParameter('bookingDate', $bookingDate)
+            ->setParameter('serviceOpeningTime', $serviceOpeningTime)
+            ->setParameter('serviceClosingTime', $serviceClosingTime)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

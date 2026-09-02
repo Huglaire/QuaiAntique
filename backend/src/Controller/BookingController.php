@@ -486,4 +486,99 @@ final class BookingController
         // Confirme la suppression.
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
+
+    /**
+     * Détermine le service correspondant à une heure donnée.
+     *
+     * Retourne les horaires d'ouverture et de fermeture du service,
+     * ou null si l'heure ne correspond à aucun service.
+     */
+    private function getServiceTimes(
+        Restaurant $restaurant,
+        \DateTimeInterface $bookingTime
+    ): ?array {
+        // Récupère l'heure d'ouverture du service du midi.
+        $lunchOpeningTime = $restaurant->getLunchOpeningTime();
+
+        // Récupère l'heure d'ouverture du service du soir.
+        $dinnerOpeningTime = $restaurant->getDinnerOpeningTime();
+
+        // Vérifie que les deux horaires sont bien configurés.
+        if (
+            $lunchOpeningTime === null
+            || $dinnerOpeningTime === null
+        ) {
+            return null;
+        }
+
+        // Crée l'heure de fermeture du service du midi.
+        $lunchClosingTime = (clone $lunchOpeningTime)
+            ->modify('+2 hours');
+
+        // Crée l'heure de fermeture du service du soir.
+        $dinnerClosingTime = (clone $dinnerOpeningTime)
+            ->modify('+2 hours');
+
+        // Convertit les heures en chaînes pour faciliter la comparaison.
+        $requestedTime = $bookingTime->format('H:i');
+        $lunchOpening = $lunchOpeningTime->format('H:i');
+        $lunchClosing = $lunchClosingTime->format('H:i');
+        $dinnerOpening = $dinnerOpeningTime->format('H:i');
+        $dinnerClosing = $dinnerClosingTime->format('H:i');
+
+        // Vérifie si l'heure appartient au service du midi.
+        if (
+            $requestedTime >= $lunchOpening
+            && $requestedTime <= $lunchClosing
+        ) {
+            return [
+                'opening' => $lunchOpeningTime,
+                'closing' => $lunchClosingTime,
+            ];
+        }
+
+        // Vérifie si l'heure appartient au service du soir.
+        if (
+            $requestedTime >= $dinnerOpening
+            && $requestedTime <= $dinnerClosing
+        ) {
+            return [
+                'opening' => $dinnerOpeningTime,
+                'closing' => $dinnerClosingTime,
+            ];
+        }
+
+        // L'heure ne correspond à aucun service.
+        return null;
+    }
+
+    /**
+     * Génère les créneaux de réservation d'un service.
+     *
+     * Les créneaux sont espacés de 15 minutes.
+     * L'heure de fermeture est incluse.
+     *
+     * @return \DateTime[]
+     */
+    private function generateTimeSlots(
+        \DateTimeInterface $openingTime,
+        \DateTimeInterface $closingTime
+    ): array {
+        // Initialise le tableau qui contiendra les créneaux.
+        $slots = [];
+
+        // Commence à l'heure d'ouverture du service.
+        $currentTime = clone $openingTime;
+
+        // Génère les créneaux jusqu'à l'heure de fermeture incluse.
+        while ($currentTime <= $closingTime) {
+            // Ajoute le créneau actuel au tableau.
+            $slots[] = clone $currentTime;
+
+            // Passe au créneau suivant, 15 minutes plus tard.
+            $currentTime->modify('+15 minutes');
+        }
+
+        return $slots;
+    }
 }
