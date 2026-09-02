@@ -4,16 +4,20 @@ namespace App\Controller;
 
 use App\Entity\Booking;
 use App\Entity\Restaurant;
+use App\Entity\User;
+use App\Repository\BookingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Uid\Uuid;
-use App\Entity\User;
 
 final class BookingController
 {
+    /**
+     * Crée une nouvelle réservation.
+     */
     #[Route('/api/bookings', name: 'api_booking_create', methods: ['POST'])]
     public function create(
         Request $request,
@@ -187,5 +191,52 @@ final class BookingController
                 ],
             ],
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    /**
+     * Retourne toutes les réservations de l'utilisateur connecté.
+     */
+    #[Route('/api/bookings', name: 'api_booking_list', methods: ['GET'])]
+    public function list(
+        #[CurrentUser] ?User $user,
+        BookingRepository $bookingRepository
+    ): JsonResponse {
+        // Vérifie qu'un utilisateur authentifié est disponible.
+        if ($user === null) {
+            return new JsonResponse([
+                'message' => 'Utilisateur non authentifié.'
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupère uniquement les réservations appartenant
+        // à l'utilisateur connecté.
+        $bookings = $bookingRepository->findByUser($user);
+
+        // Prépare les données à retourner au frontend.
+        $result = [];
+
+        foreach ($bookings as $booking) {
+            $restaurant = $booking->getRestaurant();
+
+            $result[] = [
+                'uuid' => $booking->getUuid(),
+                'guestNumber' => $booking->getGuestNumber(),
+                'bookingDate' => $booking->getBookingDate()?->format('Y-m-d'),
+                'bookingTime' => $booking->getBookingTime()?->format('H:i'),
+                'allergy' => $booking->getAllergy(),
+                'createdAt' => $booking->getCreatedAt()?->format(
+                    \DateTimeInterface::ATOM
+                ),
+                'restaurant' => [
+                    'uuid' => $restaurant?->getUuid(),
+                    'name' => $restaurant?->getName(),
+                ],
+            ];
+        }
+
+        // Retourne les réservations de l'utilisateur.
+        return new JsonResponse([
+            'bookings' => $result,
+        ], JsonResponse::HTTP_OK);
     }
 }
