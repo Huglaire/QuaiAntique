@@ -435,4 +435,55 @@ final class BookingController
             ],
         ], JsonResponse::HTTP_OK);
     }
+
+    /**
+     * Supprime une réservation de l'utilisateur connecté.
+     */
+    #[Route(
+        '/api/bookings/{uuid}',
+        name: 'api_booking_delete',
+        methods: ['DELETE']
+    )]
+    public function delete(
+        string $uuid,
+        #[CurrentUser] ?User $user,
+        BookingRepository $bookingRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        // Vérifie qu'un utilisateur authentifié est disponible.
+        if ($user === null) {
+            return new JsonResponse([
+                'message' => 'Utilisateur non authentifié.'
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Vérifie que l'UUID fourni est valide.
+        if (!Uuid::isValid($uuid)) {
+            return new JsonResponse([
+                'message' => 'L\'UUID de la réservation est invalide.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Recherche la réservation uniquement parmi celles
+        // appartenant à l'utilisateur connecté.
+        $booking = $bookingRepository->findOneByUuidAndUser(
+            $uuid,
+            $user
+        );
+
+        // Vérifie que la réservation existe et appartient bien
+        // à l'utilisateur connecté.
+        if ($booking === null) {
+            return new JsonResponse([
+                'message' => 'Réservation introuvable.'
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        // Supprime la réservation.
+        $entityManager->remove($booking);
+        $entityManager->flush();
+
+        // Confirme la suppression.
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
 }
