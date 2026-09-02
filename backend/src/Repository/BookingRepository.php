@@ -35,4 +35,20 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Retourne une réservation appartenant à un utilisateur à partir de son UUID.
+     */
+    public function findOneByUuidAndUser(
+        string $uuid,
+        User $user
+    ): ?Booking {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.uuid = :uuid')
+            ->andWhere('b.user = :user')
+            ->setParameter('uuid', $uuid)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
