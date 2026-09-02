@@ -14,9 +14,6 @@ use App\Entity\User;
 
 final class BookingController
 {
-    /**
-     * Crée une nouvelle réservation.
-     */
     #[Route('/api/bookings', name: 'api_booking_create', methods: ['POST'])]
     public function create(
         Request $request,
@@ -113,6 +110,16 @@ final class BookingController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        // Récupère la date actuelle sans tenir compte de l'heure.
+        $today = new \DateTime('today');
+
+        // Vérifie que la date de réservation n'est pas antérieure à aujourd'hui.
+        if ($bookingDate < $today) {
+            return new JsonResponse([
+                'message' => 'La date de réservation ne peut pas être antérieure à aujourd\'hui.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         // Convertit l'heure envoyée par le frontend.
         $bookingTime = \DateTime::createFromFormat(
             'H:i',
@@ -171,7 +178,9 @@ final class BookingController
                 'bookingDate' => $booking->getBookingDate()?->format('Y-m-d'),
                 'bookingTime' => $booking->getBookingTime()?->format('H:i'),
                 'allergy' => $booking->getAllergy(),
-                'createdAt' => $booking->getCreatedAt()?->format(\DateTimeInterface::ATOM),
+                'createdAt' => $booking->getCreatedAt()?->format(
+                    \DateTimeInterface::ATOM
+                ),
                 'restaurant' => [
                     'uuid' => $restaurant->getUuid(),
                     'name' => $restaurant->getName(),
