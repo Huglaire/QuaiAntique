@@ -23,7 +23,8 @@ final class BookingController
     public function create(
         Request $request,
         #[CurrentUser] ?User $user,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        BookingRepository $bookingRepository
     ): JsonResponse {
         // Vérifie qu'un utilisateur authentifié est disponible.
         if ($user === null) {
@@ -60,9 +61,9 @@ final class BookingController
             }
         }
 
-        // Vérifie que le nombre de convives est un nombre entier positif.
+        // Vérifie que le nombre de convives est un entier positif.
         if (
-            !is_numeric($data['guestNumber'])
+            !ctype_digit((string) $data['guestNumber'])
             || (int) $data['guestNumber'] <= 0
         ) {
             return new JsonResponse([
@@ -125,6 +126,13 @@ final class BookingController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        // Le restaurant est fermé le lundi.
+        if ((int) $bookingDate->format('N') === 1) {
+            return new JsonResponse([
+                'message' => 'Le restaurant est fermé le lundi.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         // Convertit l'heure envoyée par le frontend.
         $bookingTime = \DateTime::createFromFormat(
             'H:i',
@@ -138,6 +146,47 @@ final class BookingController
         ) {
             return new JsonResponse([
                 'message' => 'L\'heure de réservation est invalide. Le format attendu est HH:MM.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que l'heure demandée appartient bien
+        // à l'un des deux services du restaurant.
+        $serviceTimes = $this->getServiceTimes(
+            $restaurant,
+            $bookingTime
+        );
+
+        if ($serviceTimes === null) {
+            return new JsonResponse([
+                'message' => 'L\'heure demandée ne correspond à aucun créneau de réservation.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que l'heure demandée correspond bien
+        // à un créneau de 15 minutes.
+        if (!$this->isValidTimeSlot(
+            $bookingTime,
+            $serviceTimes['opening'],
+            $serviceTimes['closing']
+        )) {
+            return new JsonResponse([
+                'message' => 'L\'heure demandée ne correspond pas à un créneau disponible.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie la capacité restante du service.
+        $capacityAvailable = $this->checkServiceCapacity(
+            $bookingRepository,
+            $restaurant,
+            $bookingDate,
+            $serviceTimes['opening'],
+            $serviceTimes['closing'],
+            $guestNumber
+        );
+
+        if (!$capacityAvailable) {
+            return new JsonResponse([
+                'message' => 'Le nombre maximum de convives pour ce service est atteint.'
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
@@ -220,7 +269,7 @@ final class BookingController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Vérifie que le nombre de convives est bien un entier positif.
+        // Vérifie que le nombre de convives est un entier positif.
         if (
             !ctype_digit((string) $guestNumber)
             || (int) $guestNumber <= 0
@@ -232,34 +281,11 @@ final class BookingController
 
         $guestNumber = (int) $guestNumber;
 
-        // Vérifie le format de la date.
-        $bookingDate = \DateTime::createFromFormat(
-            'Y-m-d',
-            $date
-        );
-
-        if (
-            !$bookingDate
-            || $bookingDate->format('Y-m-d') !== $date
-        ) {
-            return new JsonResponse([
-                'message' => 'La date doit être au format YYYY-MM-DD.',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        // Vérifie que la date n'est pas passée.
-        $today = new \DateTime('today');
-
-        if ($bookingDate < $today) {
-            return new JsonResponse([
-                'message' => 'Impossible de consulter les disponibilités d’une date passée.',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        // Le restaurant est actuellement unique dans l'application.
+        // Récupère le restaurant.
         $restaurant = $restaurantRepository->findOneBy([]);
 
-        if (!$restaurant) {
+        // Vérifie qu'un restaurant existe.
+        if ($restaurant === null) {
             return new JsonResponse([
                 'message' => 'Restaurant introuvable.',
             ], JsonResponse::HTTP_NOT_FOUND);
@@ -276,6 +302,30 @@ final class BookingController
                     'Le nombre maximum de convives est de %d.',
                     $restaurant->getMaxGuest()
                 ),
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie le format de la date.
+        $bookingDate = \DateTime::createFromFormat(
+            'Y-m-d',
+            $date
+        );
+
+        if (
+            $bookingDate === false
+            || $bookingDate->format('Y-m-d') !== $date
+        ) {
+            return new JsonResponse([
+                'message' => 'La date doit être au format YYYY-MM-DD.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que la date n'est pas passée.
+        $today = new \DateTime('today');
+
+        if ($bookingDate < $today) {
+            return new JsonResponse([
+                'message' => 'Impossible de consulter les disponibilités d’une date passée.',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
@@ -302,24 +352,20 @@ final class BookingController
         /*
          * Vérification de la disponibilité du service du midi.
          */
-        if ($lunchOpeningTime) {
+        if ($lunchOpeningTime !== null) {
             // Chaque service dure deux heures.
             $lunchClosingTime = (clone $lunchOpeningTime)
                 ->modify('+2 hours');
 
-            // Calcule le nombre de couverts déjà réservés
-            // pendant le service du midi.
-            $reservedGuests = $bookingRepository->countGuestsForService(
+            // Vérifie la capacité restante du service.
+            $serviceAvailable = $this->checkServiceCapacity(
+                $bookingRepository,
+                $restaurant,
                 $bookingDate,
                 $lunchOpeningTime,
-                $lunchClosingTime
+                $lunchClosingTime,
+                $guestNumber
             );
-
-            // Vérifie si la nouvelle réservation peut être ajoutée
-            // sans dépasser la capacité maximale du restaurant.
-            $serviceAvailable =
-                ($reservedGuests + $guestNumber)
-                <= $restaurant->getMaxGuest();
 
             // Génère les créneaux de 15 minutes.
             $slots = $this->generateTimeSlots(
@@ -339,24 +385,20 @@ final class BookingController
         /*
          * Vérification de la disponibilité du service du soir.
          */
-        if ($dinnerOpeningTime) {
+        if ($dinnerOpeningTime !== null) {
             // Chaque service dure deux heures.
             $dinnerClosingTime = (clone $dinnerOpeningTime)
                 ->modify('+2 hours');
 
-            // Calcule le nombre de couverts déjà réservés
-            // pendant le service du soir.
-            $reservedGuests = $bookingRepository->countGuestsForService(
+            // Vérifie la capacité restante du service.
+            $serviceAvailable = $this->checkServiceCapacity(
+                $bookingRepository,
+                $restaurant,
                 $bookingDate,
                 $dinnerOpeningTime,
-                $dinnerClosingTime
+                $dinnerClosingTime,
+                $guestNumber
             );
-
-            // Vérifie si la nouvelle réservation peut être ajoutée
-            // sans dépasser la capacité maximale du restaurant.
-            $serviceAvailable =
-                ($reservedGuests + $guestNumber)
-                <= $restaurant->getMaxGuest();
 
             // Génère les créneaux de 15 minutes.
             $slots = $this->generateTimeSlots(
@@ -490,10 +532,20 @@ final class BookingController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
+        // Conserve les anciennes valeurs avant modification.
+        $oldBookingDate = $booking->getBookingDate();
+        $oldBookingTime = $booking->getBookingTime();
+        $oldGuestNumber = $booking->getGuestNumber();
+
+        // Détermine les nouvelles valeurs.
+        $newBookingDate = $oldBookingDate;
+        $newBookingTime = $oldBookingTime;
+        $newGuestNumber = $oldGuestNumber;
+
         // Modifie le nombre de convives s'il est présent.
         if (array_key_exists('guestNumber', $data)) {
             if (
-                !is_numeric($data['guestNumber'])
+                !ctype_digit((string) $data['guestNumber'])
                 || (int) $data['guestNumber'] <= 0
             ) {
                 return new JsonResponse([
@@ -501,13 +553,13 @@ final class BookingController
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            $guestNumber = (int) $data['guestNumber'];
+            $newGuestNumber = (int) $data['guestNumber'];
 
             // Vérifie que le nombre de convives ne dépasse pas
             // la capacité maximale du restaurant.
             if (
                 $restaurant->getMaxGuest() !== null
-                && $guestNumber > $restaurant->getMaxGuest()
+                && $newGuestNumber > $restaurant->getMaxGuest()
             ) {
                 return new JsonResponse([
                     'message' => sprintf(
@@ -516,8 +568,6 @@ final class BookingController
                     )
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
-
-            $booking->setGuestNumber($guestNumber);
         }
 
         // Modifie la date si elle est présente.
@@ -528,15 +578,15 @@ final class BookingController
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            $bookingDate = \DateTime::createFromFormat(
+            $parsedBookingDate = \DateTime::createFromFormat(
                 'Y-m-d',
                 $data['bookingDate']
             );
 
             // Vérifie le format de la date.
             if (
-                $bookingDate === false
-                || $bookingDate->format('Y-m-d') !== $data['bookingDate']
+                $parsedBookingDate === false
+                || $parsedBookingDate->format('Y-m-d') !== $data['bookingDate']
             ) {
                 return new JsonResponse([
                     'message' => 'La date de réservation est invalide. Le format attendu est AAAA-MM-JJ.'
@@ -547,13 +597,20 @@ final class BookingController
             $today = new \DateTime('today');
 
             // Vérifie que la nouvelle date n'est pas antérieure à aujourd'hui.
-            if ($bookingDate < $today) {
+            if ($parsedBookingDate < $today) {
                 return new JsonResponse([
                     'message' => 'La date de réservation ne peut pas être antérieure à aujourd\'hui.'
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            $booking->setBookingDate($bookingDate);
+            // Le restaurant est fermé le lundi.
+            if ((int) $parsedBookingDate->format('N') === 1) {
+                return new JsonResponse([
+                    'message' => 'Le restaurant est fermé le lundi.'
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $newBookingDate = $parsedBookingDate;
         }
 
         // Modifie l'heure si elle est présente.
@@ -564,23 +621,72 @@ final class BookingController
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            $bookingTime = \DateTime::createFromFormat(
+            $parsedBookingTime = \DateTime::createFromFormat(
                 'H:i',
                 $data['bookingTime']
             );
 
             // Vérifie le format de l'heure.
             if (
-                $bookingTime === false
-                || $bookingTime->format('H:i') !== $data['bookingTime']
+                $parsedBookingTime === false
+                || $parsedBookingTime->format('H:i') !== $data['bookingTime']
             ) {
                 return new JsonResponse([
                     'message' => 'L\'heure de réservation est invalide. Le format attendu est HH:MM.'
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            $booking->setBookingTime($bookingTime);
+            $newBookingTime = $parsedBookingTime;
         }
+
+        // Vérifie que la nouvelle heure appartient bien
+        // à l'un des deux services.
+        $serviceTimes = $this->getServiceTimes(
+            $restaurant,
+            $newBookingTime
+        );
+
+        if ($serviceTimes === null) {
+            return new JsonResponse([
+                'message' => 'L\'heure demandée ne correspond à aucun créneau de réservation.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que l'heure demandée correspond bien
+        // à un créneau de 15 minutes.
+        if (!$this->isValidTimeSlot(
+            $newBookingTime,
+            $serviceTimes['opening'],
+            $serviceTimes['closing']
+        )) {
+            return new JsonResponse([
+                'message' => 'L\'heure demandée ne correspond pas à un créneau disponible.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie la capacité du nouveau service.
+        // La réservation actuelle est exclue du calcul afin
+        // qu'elle ne soit pas comptée deux fois.
+        $capacityAvailable = $this->checkServiceCapacity(
+            $bookingRepository,
+            $restaurant,
+            $newBookingDate,
+            $serviceTimes['opening'],
+            $serviceTimes['closing'],
+            $newGuestNumber,
+            $booking
+        );
+
+        if (!$capacityAvailable) {
+            return new JsonResponse([
+                'message' => 'Le nombre maximum de convives pour ce service est atteint.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Applique les nouvelles valeurs à la réservation.
+        $booking->setGuestNumber($newGuestNumber);
+        $booking->setBookingDate($newBookingDate);
+        $booking->setBookingTime($newBookingTime);
 
         // Modifie les allergies si le champ est présent.
         if (array_key_exists('allergy', $data)) {
@@ -736,6 +842,79 @@ final class BookingController
 
         // L'heure ne correspond à aucun service.
         return null;
+    }
+
+    /**
+     * Vérifie qu'une heure correspond à un créneau de 15 minutes.
+     */
+    private function isValidTimeSlot(
+        \DateTimeInterface $bookingTime,
+        \DateTimeInterface $openingTime,
+        \DateTimeInterface $closingTime
+    ): bool {
+        // Convertit les heures en minutes depuis minuit.
+        $bookingMinutes =
+            ((int) $bookingTime->format('H') * 60)
+            + (int) $bookingTime->format('i');
+
+        $openingMinutes =
+            ((int) $openingTime->format('H') * 60)
+            + (int) $openingTime->format('i');
+
+        $closingMinutes =
+            ((int) $closingTime->format('H') * 60)
+            + (int) $closingTime->format('i');
+
+        // Vérifie que l'heure est comprise dans le service.
+        if (
+            $bookingMinutes < $openingMinutes
+            || $bookingMinutes > $closingMinutes
+        ) {
+            return false;
+        }
+
+        // Vérifie que l'heure correspond à un intervalle
+        // exact de 15 minutes depuis l'ouverture.
+        return (
+            ($bookingMinutes - $openingMinutes) % 15
+        ) === 0;
+    }
+
+    /**
+     * Vérifie si la capacité du service permet une réservation.
+     *
+     * La réservation actuellement modifiée peut être exclue
+     * du calcul afin d'éviter qu'elle soit comptée deux fois.
+     */
+    private function checkServiceCapacity(
+        BookingRepository $bookingRepository,
+        Restaurant $restaurant,
+        \DateTimeInterface $bookingDate,
+        \DateTimeInterface $serviceOpeningTime,
+        \DateTimeInterface $serviceClosingTime,
+        int $guestNumber,
+        ?Booking $excludedBooking = null
+    ): bool {
+        // Récupère le nombre de couverts déjà réservés
+        // pendant le service concerné.
+        $reservedGuests = $bookingRepository->countGuestsForService(
+            $bookingDate,
+            $serviceOpeningTime,
+            $serviceClosingTime,
+            $excludedBooking
+        );
+
+        // Si aucune capacité maximale n'est définie,
+        // le service est considéré comme disponible.
+        if ($restaurant->getMaxGuest() === null) {
+            return true;
+        }
+
+        // Vérifie que les couverts déjà réservés
+        // et les nouveaux couverts ne dépassent pas la capacité.
+        return (
+            $reservedGuests + $guestNumber
+        ) <= $restaurant->getMaxGuest();
     }
 
     /**
