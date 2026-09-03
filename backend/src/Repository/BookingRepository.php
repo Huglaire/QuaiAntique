@@ -39,6 +39,19 @@ class BookingRepository extends ServiceEntityRepository
     }
 
     /**
+     * Récupère toutes les réservations d'une date donnée.
+     */
+    public function findByDate(DateTimeInterface $bookingDate): array
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.bookingDate = :bookingDate')
+            ->setParameter('bookingDate', $bookingDate, Types::DATE_MUTABLE)
+            ->orderBy('b.bookingTime', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Retourne une réservation appartenant à un utilisateur
      * à partir de son UUID.
      */
