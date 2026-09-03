@@ -16,7 +16,7 @@ class Picture
     #[ORM\Column(length: 150)]
     private ?string $title = null;
 
-    #[ORM\Column(length: 180)]
+    #[ORM\Column(length: 180, unique: true)]
     private ?string $slug = null;
 
     #[ORM\Column]
