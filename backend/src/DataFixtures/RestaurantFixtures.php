@@ -23,8 +23,7 @@ class RestaurantFixtures extends Fixture
         $restaurant->setName('Quai Antique');
 
         $restaurant->setDescription(
-            'Restaurant gastronomique proposant une cuisine traditionnelle française, '
-            . 'élaborée à partir de produits frais et de saison.'
+            'Restaurant gastronomique du chef Arnaud Michant. Tradition et raffinement sont les maîtres-mots pour satisfaire nos clients'
         );
 
         // Définit l'heure d'ouverture du service du midi.
