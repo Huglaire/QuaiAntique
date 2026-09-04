@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -16,10 +15,10 @@ class Category
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::GUID, unique: true)]
+    #[ORM\Column(type: 'guid', unique: true)]
     private ?string $uuid = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, unique: true)]
     private ?string $title = null;
 
     #[ORM\Column]
@@ -113,7 +112,7 @@ class Category
     public function removeFood(Food $food): static
     {
         if ($this->foods->removeElement($food)) {
-            // set the owning side to null (unless already changed)
+            // Définit la catégorie du plat à null si nécessaire.
             if ($food->getCategory() === $this) {
                 $food->setCategory(null);
             }

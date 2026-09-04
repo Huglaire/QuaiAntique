@@ -45,12 +45,12 @@ class BookingFixtures extends Fixture implements DependentFixtureInterface
 
         // Récupère l'utilisateur de test.
         $user = $this->userRepository->findOneBy([
-            'email' => 'hugo@mail.fr',
+            'email' => 'user@mail.fr',
         ]);
 
         if ($user === null) {
             throw new \RuntimeException(
-                'L\'utilisateur hugo@mail.fr est introuvable.'
+                'L\'utilisateur user@mail.fr est introuvable.'
             );
         }
 
