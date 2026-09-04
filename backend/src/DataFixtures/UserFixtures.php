@@ -26,11 +26,11 @@ class UserFixtures extends Fixture
         );
 
         // Informations personnelles.
-        $user->setFirstName('Hugo');
+        $user->setFirstName('User');
         $user->setLastName('Test');
 
         // Adresse e-mail utilisée pour les tests.
-        $user->setEmail('hugo@mail.fr');
+        $user->setEmail('user@mail.fr');
 
         // Rôle de l'utilisateur.
         $user->setRoles(['ROLE_USER']);
