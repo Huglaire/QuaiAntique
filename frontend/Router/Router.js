@@ -1,52 +1,61 @@
-// Élément dans lequel les pages sont affichées
+import allRoutes from './allRoutes.js';
+
+// Zone dans laquelle les pages sont affichées
 const mainPage = document.getElementById('main-page');
 
-// Pages disponibles dans l'application
-const routes = {
-    '/': 'pages/home.html',
-    '/menus': 'pages/menus.html',
-    '/galerie': 'pages/galerie.html',
-    '/connexion': 'pages/connexion.html',
-    '/inscription': 'pages/inscription.html',
-};
 
+// Charge la page correspondant à l'URL
+async function loadRoute(path) {
 
-// Charge une page dans le contenu principal
-async function loadPage(path) {
-    const page = routes[path];
+    const route = allRoutes.find(
+        (route) => route.path === path
+    );
 
     // Affiche une erreur si la route n'existe pas
-    if (!page) {
+    if (!route) {
+
         mainPage.innerHTML = `
             <section>
                 <h1>Page introuvable</h1>
-                <p>La page demandée n'existe pas.</p>
+                <p>
+                    La page demandée n'existe pas.
+                </p>
             </section>
         `;
+
+        document.title = 'Page introuvable - Quai Antique';
 
         return;
     }
 
     try {
-        const response = await fetch(page);
 
-        // Vérifie que le fichier HTML existe
+        // Récupère le contenu HTML de la page
+        const response = await fetch(route.view);
+
         if (!response.ok) {
             throw new Error(
-                `Impossible de charger ${page}`
+                `Impossible de charger ${route.view}`
             );
         }
 
-        mainPage.innerHTML = await response.text();
+        const html = await response.text();
+
+        // Injecte la page dans le contenu principal
+        mainPage.innerHTML = html;
+
+        // Met à jour le titre de l'onglet
+        document.title = `${route.title} - Quai Antique`;
 
     } catch (error) {
+
         console.error(error);
 
         mainPage.innerHTML = `
             <section>
-                <h1>Une erreur est survenue</h1>
+                <h1>Erreur</h1>
                 <p>
-                    Impossible de charger cette page.
+                    Impossible de charger la page.
                 </p>
             </section>
         `;
@@ -54,27 +63,37 @@ async function loadPage(path) {
 }
 
 
-// Change de page sans recharger le navigateur
+// Gère la navigation interne
 function navigate(path) {
-    window.history.pushState({}, '', path);
 
-    loadPage(path);
+    window.history.pushState(
+        {},
+        '',
+        path
+    );
+
+    loadRoute(path);
 }
 
 
-// Gère les clics sur les liens internes
+// Intercepte les clics sur les liens
 document.addEventListener('click', (event) => {
+
     const link = event.target.closest('a');
 
-    // Ignore les clics qui ne concernent pas un lien
     if (!link) {
         return;
     }
 
-    const url = new URL(link.href);
+    const url = new URL(
+        link.href,
+        window.location.origin
+    );
 
-    // Laisse le navigateur gérer les liens externes
-    if (url.origin !== window.location.origin) {
+    // Laisse les liens externes au navigateur
+    if (
+        url.origin !== window.location.origin
+    ) {
         return;
     }
 
@@ -84,11 +103,12 @@ document.addEventListener('click', (event) => {
 });
 
 
-// Gère les boutons précédent / suivant du navigateur
+// Gère les boutons précédent / suivant
 window.addEventListener('popstate', () => {
-    loadPage(window.location.pathname);
+
+    loadRoute(window.location.pathname);
 });
 
 
-// Charge la page correspondant à l'URL actuelle
-loadPage(window.location.pathname);
+// Charge la page au démarrage
+loadRoute(window.location.pathname);
