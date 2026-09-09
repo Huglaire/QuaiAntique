@@ -8,18 +8,90 @@ use App\Entity\User;
 use App\Repository\BookingRepository;
 use App\Repository\RestaurantRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Uid\Uuid;
 
+#[OA\Tag(
+    name: 'Réservations',
+    description: 'Création et gestion des réservations des utilisateurs.'
+)]
 final class BookingController
 {
     /**
      * Crée une nouvelle réservation.
      */
     #[Route('/api/bookings', name: 'api_booking_create', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/bookings',
+        summary: 'Créer une réservation',
+        description: 'Crée une nouvelle réservation pour l’utilisateur connecté.',
+        tags: ['Réservations'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Réservation créée avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Les données sont invalides, le créneau est indisponible ou la capacité maximale est atteinte.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Restaurant introuvable.'
+            ),
+        ]
+    )]
+    #[OA\RequestBody(
+        description: 'Informations nécessaires à la création de la réservation.',
+        required: true,
+        content: new OA\JsonContent(
+            required: [
+                'guestNumber',
+                'bookingDate',
+                'bookingTime',
+            ],
+            properties: [
+                new OA\Property(
+                    property: 'guestNumber',
+                    type: 'integer',
+                    example: 2,
+                    description: 'Nombre de convives.'
+                ),
+                new OA\Property(
+                    property: 'bookingDate',
+                    type: 'string',
+                    format: 'date',
+                    example: '2026-09-15',
+                    description: 'Date de la réservation au format AAAA-MM-JJ.'
+                ),
+                new OA\Property(
+                    property: 'bookingTime',
+                    type: 'string',
+                    pattern: '^[0-9]{2}:[0-9]{2}$',
+                    example: '12:30',
+                    description: 'Heure de la réservation au format HH:MM.'
+                ),
+                new OA\Property(
+                    property: 'allergy',
+                    type: 'string',
+                    example: 'Arachides',
+                    nullable: true,
+                    description: 'Allergies ou informations alimentaires particulières.'
+                ),
+            ]
+        )
+    )]
     public function create(
         Request $request,
         #[CurrentUser] ?User $user,
@@ -251,6 +323,57 @@ final class BookingController
         name: 'api_booking_availability',
         methods: ['GET']
     )]
+    #[OA\Get(
+        path: '/api/bookings/availability',
+        summary: 'Consulter les disponibilités',
+        description: 'Retourne les créneaux de réservation disponibles pour une date et un nombre de convives donnés.',
+        tags: ['Réservations'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'date',
+                description: 'Date pour laquelle consulter les disponibilités.',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'date'
+                ),
+                example: '2026-09-15'
+            ),
+            new OA\Parameter(
+                name: 'guestNumber',
+                description: 'Nombre de convives.',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'integer',
+                    minimum: 1
+                ),
+                example: 2
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Disponibilités retournées avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'La date ou le nombre de convives est invalide.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Restaurant introuvable.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+        ]
+    )]
     public function availability(
         Request $request,
         RestaurantRepository $restaurantRepository,
@@ -425,6 +548,25 @@ final class BookingController
      * Retourne toutes les réservations de l'utilisateur connecté.
      */
     #[Route('/api/bookings', name: 'api_booking_list', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/bookings',
+        summary: 'Lister mes réservations',
+        description: 'Retourne toutes les réservations appartenant à l’utilisateur connecté.',
+        tags: ['Réservations'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Réservations retournées avec succès.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+        ]
+    )]
     public function list(
         #[CurrentUser] ?User $user,
         BookingRepository $bookingRepository
@@ -475,6 +617,81 @@ final class BookingController
         '/api/bookings/{uuid}',
         name: 'api_booking_update',
         methods: ['PATCH']
+    )]
+    #[OA\Patch(
+        path: '/api/bookings/{uuid}',
+        summary: 'Modifier une réservation',
+        description: 'Modifie une réservation appartenant à l’utilisateur connecté.',
+        tags: ['Réservations'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la réservation à modifier.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Réservation modifiée avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Les données ou le créneau demandé sont invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Réservation ou restaurant introuvable.'
+            ),
+        ]
+    )]
+    #[OA\RequestBody(
+        description: 'Champs de la réservation à modifier. Tous les champs sont facultatifs.',
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'guestNumber',
+                    type: 'integer',
+                    example: 4,
+                    description: 'Nouveau nombre de convives.'
+                ),
+                new OA\Property(
+                    property: 'bookingDate',
+                    type: 'string',
+                    format: 'date',
+                    example: '2026-09-20',
+                    description: 'Nouvelle date de réservation au format AAAA-MM-JJ.'
+                ),
+                new OA\Property(
+                    property: 'bookingTime',
+                    type: 'string',
+                    pattern: '^[0-9]{2}:[0-9]{2}$',
+                    example: '19:30',
+                    description: 'Nouvelle heure de réservation au format HH:MM.'
+                ),
+                new OA\Property(
+                    property: 'allergy',
+                    type: 'string',
+                    example: 'Arachides',
+                    nullable: true,
+                    description: 'Allergies ou informations alimentaires particulières.'
+                ),
+            ]
+        )
     )]
     public function update(
         string $uuid,
@@ -735,6 +952,46 @@ final class BookingController
         '/api/bookings/{uuid}',
         name: 'api_booking_delete',
         methods: ['DELETE']
+    )]
+    #[OA\Delete(
+        path: '/api/bookings/{uuid}',
+        summary: 'Supprimer une réservation',
+        description: 'Supprime une réservation appartenant à l’utilisateur connecté.',
+        tags: ['Réservations'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la réservation à supprimer.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Réservation supprimée avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'L’UUID fourni est invalide.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Réservation introuvable ou n’appartenant pas à l’utilisateur connecté.'
+            ),
+        ]
     )]
     public function delete(
         string $uuid,

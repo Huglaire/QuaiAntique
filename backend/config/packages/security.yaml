@@ -43,9 +43,13 @@ security:
 
     # Définit les accès aux différentes parties de l'application.
     access_control:
-        # L'inscription et la connexion sont accessibles sans authentification.
         - { path: ^/api/register$, roles: PUBLIC_ACCESS }
         - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc\.json$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/foods$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/menus$, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: ROLE_USER }
 
         # Les autres routes de l'API nécessitent une authentification.
         - { path: ^/api, roles: ROLE_USER }

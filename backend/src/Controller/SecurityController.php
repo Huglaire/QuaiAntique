@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -11,9 +12,81 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Uid\Uuid;
 
+#[OA\Tag(
+    name: 'Authentification et compte',
+    description: 'Inscription et gestion du compte utilisateur connecté.'
+)]
 final class SecurityController
 {
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/register',
+        summary: 'Créer un compte utilisateur',
+        description: 'Crée un nouveau compte client. Le rôle ROLE_USER est attribué automatiquement.',
+        tags: ['Authentification et compte'],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Utilisateur créé avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Les données envoyées sont invalides ou un champ obligatoire est manquant.'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Cette adresse e-mail est déjà utilisée.'
+            ),
+        ]
+    )]
+    #[OA\RequestBody(
+        description: 'Informations nécessaires à la création du compte.',
+        required: true,
+        content: new OA\JsonContent(
+            required: [
+                'firstName',
+                'lastName',
+                'email',
+                'password',
+                'guestNumber',
+            ],
+            properties: [
+                new OA\Property(
+                    property: 'firstName',
+                    type: 'string',
+                    example: 'Hugo'
+                ),
+                new OA\Property(
+                    property: 'lastName',
+                    type: 'string',
+                    example: 'Pollon'
+                ),
+                new OA\Property(
+                    property: 'email',
+                    type: 'string',
+                    format: 'email',
+                    example: 'hugo@example.fr'
+                ),
+                new OA\Property(
+                    property: 'password',
+                    type: 'string',
+                    format: 'password',
+                    example: 'motdepasse123'
+                ),
+                new OA\Property(
+                    property: 'guestNumber',
+                    type: 'integer',
+                    example: 2
+                ),
+                new OA\Property(
+                    property: 'allergy',
+                    type: 'string',
+                    example: 'Arachides',
+                    nullable: true
+                ),
+            ]
+        )
+    )]
     public function register(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -118,6 +191,25 @@ final class SecurityController
     }
 
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/me',
+        summary: 'Récupérer le compte connecté',
+        description: 'Retourne les informations du compte correspondant au JWT fourni.',
+        tags: ['Authentification et compte'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Informations de l’utilisateur connecté.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+        ]
+    )]
     public function me(
         #[CurrentUser] ?User $user
     ): JsonResponse {
@@ -141,6 +233,74 @@ final class SecurityController
     }
 
     #[Route('/api/me', name: 'api_me_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/me',
+        summary: 'Modifier le compte connecté',
+        description: 'Modifie les informations autorisées du compte utilisateur connecté.',
+        tags: ['Authentification et compte'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Utilisateur modifié avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Les données envoyées sont invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Cette adresse e-mail est déjà utilisée.'
+            ),
+        ]
+    )]
+    #[OA\RequestBody(
+        description: 'Champs du compte à modifier. Tous les champs sont facultatifs.',
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'firstName',
+                    type: 'string',
+                    example: 'Hugo'
+                ),
+                new OA\Property(
+                    property: 'lastName',
+                    type: 'string',
+                    example: 'Pollon'
+                ),
+                new OA\Property(
+                    property: 'email',
+                    type: 'string',
+                    format: 'email',
+                    example: 'nouvelle-adresse@example.fr'
+                ),
+                new OA\Property(
+                    property: 'password',
+                    type: 'string',
+                    format: 'password',
+                    example: 'nouveauMotDePasse123'
+                ),
+                new OA\Property(
+                    property: 'guestNumber',
+                    type: 'integer',
+                    example: 4
+                ),
+                new OA\Property(
+                    property: 'allergy',
+                    type: 'string',
+                    example: 'Aucune',
+                    nullable: true
+                ),
+            ]
+        )
+    )]
     public function update(
         Request $request,
         #[CurrentUser] ?User $user,
@@ -239,6 +399,25 @@ final class SecurityController
     }
 
     #[Route('/api/me', name: 'api_me_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/me',
+        summary: 'Supprimer le compte connecté',
+        description: 'Supprime définitivement le compte utilisateur connecté.',
+        tags: ['Authentification et compte'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Compte supprimé avec succès.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié.'
+            ),
+        ]
+    )]
     public function delete(
         #[CurrentUser] ?User $user,
         EntityManagerInterface $entityManager

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Restaurant;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -11,12 +12,81 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/admin/restaurant')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Restaurant',
+    description: 'Gestion des informations administrables du restaurant.'
+)]
 class AdminRestaurantController
 {
     /**
      * Retourne les informations du restaurant.
      */
     #[Route('', name: 'app_admin_restaurant', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/restaurant',
+        summary: 'Consulter les informations du restaurant',
+        description: 'Retourne les informations du restaurant nécessaires à son administration.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Informations du restaurant.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'uuid',
+                            type: 'string',
+                            format: 'uuid',
+                            example: '550e8400-e29b-41d4-a716-446655440000'
+                        ),
+                        new OA\Property(
+                            property: 'name',
+                            type: 'string',
+                            example: 'Quai Antique'
+                        ),
+                        new OA\Property(
+                            property: 'description',
+                            type: 'string',
+                            example: 'Restaurant gastronomique savoyard.'
+                        ),
+                        new OA\Property(
+                            property: 'lunchOpeningTime',
+                            type: 'string',
+                            nullable: true,
+                            example: '12:00'
+                        ),
+                        new OA\Property(
+                            property: 'dinnerOpeningTime',
+                            type: 'string',
+                            nullable: true,
+                            example: '19:00'
+                        ),
+                        new OA\Property(
+                            property: 'maxGuest',
+                            type: 'integer',
+                            nullable: true,
+                            example: 50
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Token JWT absent ou invalide.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès refusé : rôle administrateur requis.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Restaurant introuvable.'
+            ),
+        ]
+    )]
     public function index(
         EntityManagerInterface $entityManager
     ): JsonResponse {
@@ -52,6 +122,112 @@ class AdminRestaurantController
      * Modifie les informations administrables du restaurant.
      */
     #[Route('', name: 'app_admin_restaurant_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/admin/restaurant',
+        summary: 'Modifier les informations du restaurant',
+        description: 'Permet à un administrateur de modifier les horaires d’ouverture du midi et du soir ainsi que la capacité maximale du restaurant.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(
+                        property: 'lunchOpeningTime',
+                        type: 'string',
+                        description: 'Heure d’ouverture du service du midi au format HH:MM.',
+                        example: '12:00'
+                    ),
+                    new OA\Property(
+                        property: 'dinnerOpeningTime',
+                        type: 'string',
+                        description: 'Heure d’ouverture du service du soir au format HH:MM.',
+                        example: '19:00'
+                    ),
+                    new OA\Property(
+                        property: 'maxGuest',
+                        type: 'integer',
+                        description: 'Nombre maximal de convives.',
+                        example: 50
+                    )
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Informations du restaurant modifiées avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Informations du restaurant modifiées avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'restaurant',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'name',
+                                    type: 'string',
+                                    example: 'Quai Antique'
+                                ),
+                                new OA\Property(
+                                    property: 'description',
+                                    type: 'string',
+                                    example: 'Restaurant gastronomique savoyard.'
+                                ),
+                                new OA\Property(
+                                    property: 'lunchOpeningTime',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '12:00'
+                                ),
+                                new OA\Property(
+                                    property: 'dinnerOpeningTime',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '19:00'
+                                ),
+                                new OA\Property(
+                                    property: 'maxGuest',
+                                    type: 'integer',
+                                    nullable: true,
+                                    example: 50
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides ou champ non autorisé.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Token JWT absent ou invalide.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès refusé : rôle administrateur requis.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Restaurant introuvable.'
+            ),
+        ]
+    )]
     public function update(
         Request $request,
         EntityManagerInterface $entityManager

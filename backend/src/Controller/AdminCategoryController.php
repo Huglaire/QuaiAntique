@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Category;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,12 +13,69 @@ use Symfony\Component\Uid\Uuid;
 
 #[Route('/api/admin/categories')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Catégories',
+    description: 'Gestion des catégories de la carte du restaurant.'
+)]
 class AdminCategoryController
 {
     /**
      * Retourne toutes les catégories.
      */
     #[Route('', name: 'app_admin_categories', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/categories',
+        summary: 'Lister les catégories',
+        description: 'Retourne toutes les catégories de la carte, triées par ordre alphabétique.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Liste des catégories.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(
+                                property: 'uuid',
+                                type: 'string',
+                                format: 'uuid',
+                                example: '550e8400-e29b-41d4-a716-446655440000'
+                            ),
+                            new OA\Property(
+                                property: 'title',
+                                type: 'string',
+                                example: 'Entrées'
+                            ),
+                            new OA\Property(
+                                property: 'createdAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 10:30:00'
+                            ),
+                            new OA\Property(
+                                property: 'updatedAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 11:00:00'
+                            ),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+        ]
+    )]
     public function index(
         EntityManagerInterface $entityManager
     ): JsonResponse {
@@ -52,6 +110,89 @@ class AdminCategoryController
      * Crée une nouvelle catégorie.
      */
     #[Route('', name: 'app_admin_categories_create', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/admin/categories',
+        summary: 'Créer une catégorie',
+        description: 'Crée une nouvelle catégorie de la carte.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title'],
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 100,
+                        example: 'Entrées'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Catégorie créée avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Catégorie créée avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'category',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Entrées'
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: null
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Une catégorie portant déjà ce nom existe.'
+            ),
+        ]
+    )]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager
@@ -156,6 +297,105 @@ class AdminCategoryController
      * Modifie une catégorie.
      */
     #[Route('/{uuid}', name: 'app_admin_categories_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/admin/categories/{uuid}',
+        summary: 'Modifier une catégorie',
+        description: 'Modifie le titre d’une catégorie existante.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la catégorie.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 100,
+                        example: 'Entrées'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Catégorie modifiée avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Catégorie modifiée avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'category',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Entrées'
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 11:00:00'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID ou données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Catégorie introuvable.'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Une autre catégorie portant déjà ce nom existe.'
+            ),
+        ]
+    )]
     public function update(
         string $uuid,
         Request $request,
@@ -281,6 +521,53 @@ class AdminCategoryController
      * Supprime une catégorie.
      */
     #[Route('/{uuid}', name: 'app_admin_categories_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/admin/categories/{uuid}',
+        summary: 'Supprimer une catégorie',
+        description: 'Supprime une catégorie uniquement si elle ne contient aucun plat.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la catégorie.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Catégorie supprimée avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID invalide.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Catégorie introuvable.'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'La catégorie contient encore des plats et ne peut pas être supprimée.'
+            ),
+        ]
+    )]
     public function delete(
         string $uuid,
         EntityManagerInterface $entityManager

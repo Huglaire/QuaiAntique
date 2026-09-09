@@ -7,6 +7,7 @@ use App\Repository\FoodRepository;
 use App\Repository\MenuRepository;
 use App\Repository\RestaurantRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,12 +17,106 @@ use Symfony\Component\Uid\Uuid;
 
 #[Route('/api/admin/menus')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Menus',
+    description: 'Gestion des menus du restaurant.'
+)]
 class AdminMenuController extends AbstractController
 {
     /**
      * Liste tous les menus.
      */
     #[Route('', name: 'app_admin_menus', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/menus',
+        summary: 'Lister les menus',
+        description: 'Retourne tous les menus du restaurant, triés par ordre alphabétique.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Liste des menus.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(
+                                property: 'uuid',
+                                type: 'string',
+                                format: 'uuid',
+                                example: '550e8400-e29b-41d4-a716-446655440000'
+                            ),
+                            new OA\Property(
+                                property: 'title',
+                                type: 'string',
+                                example: 'Menu du Quai'
+                            ),
+                            new OA\Property(
+                                property: 'description',
+                                type: 'string',
+                                example: 'Une sélection des spécialités du restaurant.'
+                            ),
+                            new OA\Property(
+                                property: 'price',
+                                type: 'string',
+                                example: '45.00'
+                            ),
+                            new OA\Property(
+                                property: 'foods',
+                                type: 'array',
+                                items: new OA\Items(
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'uuid',
+                                            type: 'string',
+                                            format: 'uuid',
+                                            example: '550e8400-e29b-41d4-a716-446655440000'
+                                        ),
+                                        new OA\Property(
+                                            property: 'title',
+                                            type: 'string',
+                                            example: 'Tataki de saumon'
+                                        ),
+                                        new OA\Property(
+                                            property: 'price',
+                                            type: 'string',
+                                            example: '12.00'
+                                        ),
+                                    ]
+                                )
+                            ),
+                            new OA\Property(
+                                property: 'createdAt',
+                                type: 'string',
+                                format: 'date-time',
+                                nullable: true,
+                                example: '2026-09-09T10:30:00+00:00'
+                            ),
+                            new OA\Property(
+                                property: 'updatedAt',
+                                type: 'string',
+                                format: 'date-time',
+                                nullable: true,
+                                example: '2026-09-09T11:00:00+00:00'
+                            ),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+        ]
+    )]
     public function index(MenuRepository $menuRepository): JsonResponse
     {
         $menus = $menuRepository->findBy([], [
@@ -63,6 +158,154 @@ class AdminMenuController extends AbstractController
      * Crée un menu.
      */
     #[Route('', name: 'app_admin_menus_create', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/admin/menus',
+        summary: 'Créer un menu',
+        description: 'Crée un menu, lui attribue un UUID unique et lui associe au moins un plat existant.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: [
+                    'title',
+                    'description',
+                    'price',
+                    'foodUuids',
+                ],
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'Menu du Quai'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        type: 'string',
+                        example: 'Une sélection des spécialités du restaurant.'
+                    ),
+                    new OA\Property(
+                        property: 'price',
+                        type: 'string',
+                        example: '45.00'
+                    ),
+                    new OA\Property(
+                        property: 'foodUuids',
+                        type: 'array',
+                        minItems: 1,
+                        items: new OA\Items(
+                            type: 'string',
+                            format: 'uuid'
+                        ),
+                        example: [
+                            '550e8400-e29b-41d4-a716-446655440000',
+                            '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+                        ]
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Menu créé avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Menu créé avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'menu',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Menu du Quai'
+                                ),
+                                new OA\Property(
+                                    property: 'description',
+                                    type: 'string',
+                                    example: 'Une sélection des spécialités du restaurant.'
+                                ),
+                                new OA\Property(
+                                    property: 'price',
+                                    type: 'string',
+                                    example: '45.00'
+                                ),
+                                new OA\Property(
+                                    property: 'foods',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(
+                                                property: 'uuid',
+                                                type: 'string',
+                                                format: 'uuid',
+                                                example: '550e8400-e29b-41d4-a716-446655440000'
+                                            ),
+                                            new OA\Property(
+                                                property: 'title',
+                                                type: 'string',
+                                                example: 'Tataki de saumon'
+                                            ),
+                                            new OA\Property(
+                                                property: 'price',
+                                                type: 'string',
+                                                example: '12.00'
+                                            ),
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    format: 'date-time',
+                                    nullable: true,
+                                    example: '2026-09-09T10:30:00+00:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    format: 'date-time',
+                                    nullable: true,
+                                    example: null
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Un plat ou le restaurant est introuvable.'
+            ),
+        ]
+    )]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -269,6 +512,161 @@ class AdminMenuController extends AbstractController
         name: 'app_admin_menus_update',
         methods: ['PATCH']
     )]
+    #[OA\Patch(
+        path: '/api/admin/menus/{uuid}',
+        summary: 'Modifier un menu',
+        description: 'Modifie les informations d’un menu existant. Tous les champs sont facultatifs.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID du menu.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'Menu du Quai'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        type: 'string',
+                        example: 'Une sélection des spécialités du restaurant.'
+                    ),
+                    new OA\Property(
+                        property: 'price',
+                        type: 'string',
+                        example: '45.00'
+                    ),
+                    new OA\Property(
+                        property: 'foodUuids',
+                        type: 'array',
+                        minItems: 1,
+                        items: new OA\Items(
+                            type: 'string',
+                            format: 'uuid'
+                        ),
+                        example: [
+                            '550e8400-e29b-41d4-a716-446655440000',
+                            '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+                        ]
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Menu modifié avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Menu modifié avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'menu',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Menu du Quai'
+                                ),
+                                new OA\Property(
+                                    property: 'description',
+                                    type: 'string',
+                                    example: 'Une sélection des spécialités du restaurant.'
+                                ),
+                                new OA\Property(
+                                    property: 'price',
+                                    type: 'string',
+                                    example: '45.00'
+                                ),
+                                new OA\Property(
+                                    property: 'foods',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(
+                                                property: 'uuid',
+                                                type: 'string',
+                                                format: 'uuid',
+                                                example: '550e8400-e29b-41d4-a716-446655440000'
+                                            ),
+                                            new OA\Property(
+                                                property: 'title',
+                                                type: 'string',
+                                                example: 'Tataki de saumon'
+                                            ),
+                                            new OA\Property(
+                                                property: 'price',
+                                                type: 'string',
+                                                example: '12.00'
+                                            ),
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    format: 'date-time',
+                                    nullable: true,
+                                    example: '2026-09-09T10:30:00+00:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    format: 'date-time',
+                                    nullable: true,
+                                    example: '2026-09-09T11:00:00+00:00'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID ou données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Menu ou plat introuvable.'
+            ),
+        ]
+    )]
     public function update(
         string $uuid,
         Request $request,
@@ -472,6 +870,49 @@ class AdminMenuController extends AbstractController
         '/{uuid}',
         name: 'app_admin_menus_delete',
         methods: ['DELETE']
+    )]
+    #[OA\Delete(
+        path: '/api/admin/menus/{uuid}',
+        summary: 'Supprimer un menu',
+        description: 'Supprime définitivement un menu de la carte.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID du menu.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Menu supprimé avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID invalide.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Menu introuvable.'
+            ),
+        ]
     )]
     public function delete(
         string $uuid,

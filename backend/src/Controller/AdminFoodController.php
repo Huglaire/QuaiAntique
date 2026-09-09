@@ -6,6 +6,7 @@ use App\Entity\Category;
 use App\Entity\Food;
 use App\Entity\Restaurant;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,12 +15,99 @@ use Symfony\Component\Uid\Uuid;
 
 #[Route('/api/admin/foods')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Plats',
+    description: 'Gestion des plats de la carte du restaurant.'
+)]
 class AdminFoodController
 {
     /**
      * Retourne tous les plats.
      */
     #[Route('', name: 'app_admin_foods', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/foods',
+        summary: 'Lister les plats',
+        description: 'Retourne tous les plats de la carte, triés par ordre alphabétique.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Liste des plats.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(
+                                property: 'uuid',
+                                type: 'string',
+                                format: 'uuid',
+                                example: '550e8400-e29b-41d4-a716-446655440000'
+                            ),
+                            new OA\Property(
+                                property: 'title',
+                                type: 'string',
+                                example: 'Tataki de saumon'
+                            ),
+                            new OA\Property(
+                                property: 'description',
+                                type: 'string',
+                                example: 'Emincés de saumon et sa sauce à l\'huile de sésame.'
+                            ),
+                            new OA\Property(
+                                property: 'price',
+                                type: 'string',
+                                example: '12.00'
+                            ),
+                            new OA\Property(
+                                property: 'category',
+                                type: 'object',
+                                nullable: true,
+                                properties: [
+                                    new OA\Property(
+                                        property: 'uuid',
+                                        type: 'string',
+                                        format: 'uuid',
+                                        nullable: true,
+                                        example: '550e8400-e29b-41d4-a716-446655440000'
+                                    ),
+                                    new OA\Property(
+                                        property: 'title',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'Entrées'
+                                    ),
+                                ]
+                            ),
+                            new OA\Property(
+                                property: 'createdAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 10:30:00'
+                            ),
+                            new OA\Property(
+                                property: 'updatedAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 11:00:00'
+                            ),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+        ]
+    )]
     public function index(
         EntityManagerInterface $entityManager
     ): JsonResponse {
@@ -60,6 +148,137 @@ class AdminFoodController
      * Crée un nouveau plat.
      */
     #[Route('', name: 'app_admin_foods_create', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/admin/foods',
+        summary: 'Créer un plat',
+        description: 'Crée un nouveau plat et l\'associe à une catégorie existante.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: [
+                    'title',
+                    'description',
+                    'price',
+                    'categoryUuid',
+                ],
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'Tataki de saumon'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        type: 'string',
+                        example: 'Emincés de saumon et sa sauce à l\'huile de sésame.'
+                    ),
+                    new OA\Property(
+                        property: 'price',
+                        type: 'string',
+                        example: '12.00'
+                    ),
+                    new OA\Property(
+                        property: 'categoryUuid',
+                        type: 'string',
+                        format: 'uuid',
+                        example: '550e8400-e29b-41d4-a716-446655440000'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Plat créé avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Plat créé avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'food',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Tataki de saumon'
+                                ),
+                                new OA\Property(
+                                    property: 'description',
+                                    type: 'string',
+                                    example: 'Emincés de saumon et sa sauce à l\'huile de sésame.'
+                                ),
+                                new OA\Property(
+                                    property: 'price',
+                                    type: 'string',
+                                    example: '12.00'
+                                ),
+                                new OA\Property(
+                                    property: 'category',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'uuid',
+                                            type: 'string',
+                                            format: 'uuid',
+                                            example: '550e8400-e29b-41d4-a716-446655440000'
+                                        ),
+                                        new OA\Property(
+                                            property: 'title',
+                                            type: 'string',
+                                            example: 'Entrées'
+                                        ),
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: null
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Catégorie ou restaurant introuvable.'
+            ),
+        ]
+    )]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager
@@ -247,6 +466,147 @@ class AdminFoodController
      * Modifie un plat.
      */
     #[Route('/{uuid}', name: 'app_admin_foods_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/admin/foods/{uuid}',
+        summary: 'Modifier un plat',
+        description: 'Modifie les informations d\'un plat existant. Tous les champs sont facultatifs.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID du plat.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'Tataki de saumon'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        type: 'string',
+                        example: 'Emincés de saumon et sa sauce à l\'huile de sésame.'
+                    ),
+                    new OA\Property(
+                        property: 'price',
+                        type: 'string',
+                        example: '12.00'
+                    ),
+                    new OA\Property(
+                        property: 'categoryUuid',
+                        type: 'string',
+                        format: 'uuid',
+                        example: '550e8400-e29b-41d4-a716-446655440000'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Plat modifié avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Plat modifié avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'food',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'Tataki de saumon'
+                                ),
+                                new OA\Property(
+                                    property: 'description',
+                                    type: 'string',
+                                    example: 'Emincés de saumon et sa sauce à l\'huile de sésame.'
+                                ),
+                                new OA\Property(
+                                    property: 'price',
+                                    type: 'string',
+                                    example: '12.00'
+                                ),
+                                new OA\Property(
+                                    property: 'category',
+                                    type: 'object',
+                                    nullable: true,
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'uuid',
+                                            type: 'string',
+                                            format: 'uuid',
+                                            nullable: true,
+                                            example: '550e8400-e29b-41d4-a716-446655440000'
+                                        ),
+                                        new OA\Property(
+                                            property: 'title',
+                                            type: 'string',
+                                            nullable: true,
+                                            example: 'Entrées'
+                                        ),
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 11:00:00'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID ou données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Plat ou catégorie introuvable.'
+            ),
+        ]
+    )]
     public function update(
         string $uuid,
         Request $request,
@@ -441,6 +801,49 @@ class AdminFoodController
      * Supprime un plat.
      */
     #[Route('/{uuid}', name: 'app_admin_foods_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/admin/foods/{uuid}',
+        summary: 'Supprimer un plat',
+        description: 'Supprime définitivement un plat de la carte.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID du plat.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Plat supprimé avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'UUID invalide.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Plat introuvable.'
+            ),
+        ]
+    )]
     public function delete(
         string $uuid,
         EntityManagerInterface $entityManager

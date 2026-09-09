@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Picture;
 use App\Entity\Restaurant;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -13,12 +14,73 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[Route('/api/admin/pictures')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Galerie',
+    description: 'Gestion des photos de la galerie du restaurant.'
+)]
 class AdminPictureController
 {
     /**
      * Retourne toutes les photos de la galerie.
      */
     #[Route('', name: 'app_admin_pictures', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/pictures',
+        summary: 'Lister les photos de la galerie',
+        description: 'Retourne toutes les photos de la galerie, triées de la plus récente à la plus ancienne.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Liste des photos de la galerie.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(
+                                property: 'id',
+                                type: 'integer',
+                                example: 1
+                            ),
+                            new OA\Property(
+                                property: 'title',
+                                type: 'string',
+                                example: 'La salle du restaurant'
+                            ),
+                            new OA\Property(
+                                property: 'slug',
+                                type: 'string',
+                                example: 'la-salle-du-restaurant'
+                            ),
+                            new OA\Property(
+                                property: 'createdAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 10:30:00'
+                            ),
+                            new OA\Property(
+                                property: 'updatedAt',
+                                type: 'string',
+                                nullable: true,
+                                example: '2026-09-09 11:00:00'
+                            ),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+        ]
+    )]
     public function index(
         EntityManagerInterface $entityManager
     ): JsonResponse {
@@ -54,6 +116,93 @@ class AdminPictureController
      * Ajoute une photo à la galerie.
      */
     #[Route('', name: 'app_admin_pictures_create', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/admin/pictures',
+        summary: 'Ajouter une photo',
+        description: 'Ajoute une photo à la galerie à partir de son titre et génère automatiquement un slug unique.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title'],
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'La salle du restaurant'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Photo ajoutée avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Photo ajoutée avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'picture',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'id',
+                                    type: 'integer',
+                                    example: 1
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'La salle du restaurant'
+                                ),
+                                new OA\Property(
+                                    property: 'slug',
+                                    type: 'string',
+                                    example: 'la-salle-du-restaurant'
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: null
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Restaurant introuvable.'
+            ),
+        ]
+    )]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager
@@ -163,6 +312,102 @@ class AdminPictureController
      * Modifie une photo de la galerie.
      */
     #[Route('/{id}', name: 'app_admin_pictures_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/admin/pictures/{id}',
+        summary: 'Modifier une photo',
+        description: 'Modifie le titre d’une photo et régénère automatiquement son slug.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Identifiant de la photo.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'title',
+                        type: 'string',
+                        maxLength: 150,
+                        example: 'La nouvelle salle du restaurant'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Photo modifiée avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Photo modifiée avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'picture',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'id',
+                                    type: 'integer',
+                                    example: 1
+                                ),
+                                new OA\Property(
+                                    property: 'title',
+                                    type: 'string',
+                                    example: 'La nouvelle salle du restaurant'
+                                ),
+                                new OA\Property(
+                                    property: 'slug',
+                                    type: 'string',
+                                    example: 'la-nouvelle-salle-du-restaurant'
+                                ),
+                                new OA\Property(
+                                    property: 'createdAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 10:30:00'
+                                ),
+                                new OA\Property(
+                                    property: 'updatedAt',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '2026-09-09 11:00:00'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Photo introuvable.'
+            ),
+        ]
+    )]
     public function update(
         int $id,
         Request $request,
@@ -271,6 +516,42 @@ class AdminPictureController
      * Supprime une photo de la galerie.
      */
     #[Route('/{id}', name: 'app_admin_pictures_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/admin/pictures/{id}',
+        summary: 'Supprimer une photo',
+        description: 'Supprime définitivement une photo de la galerie.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Identifiant de la photo.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Photo supprimée avec succès.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Authentification requise.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès réservé aux administrateurs.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Photo introuvable.'
+            ),
+        ]
+    )]
     public function delete(
         int $id,
         EntityManagerInterface $entityManager

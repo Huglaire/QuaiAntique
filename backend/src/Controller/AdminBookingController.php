@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Booking;
 use App\Repository\BookingRepository;
 use App\Repository\RestaurantRepository;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,12 +14,123 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/admin/bookings')]
 #[IsGranted('ROLE_ADMIN')]
+#[OA\Tag(
+    name: 'Administration - Réservations',
+    description: 'Gestion des réservations par l’administrateur.'
+)]
 class AdminBookingController extends AbstractController
 {
     /**
      * Retourne toutes les réservations ou celles d'une date donnée.
      */
     #[Route('', name: 'app_admin_bookings', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/admin/bookings',
+        summary: 'Lister les réservations',
+        description: 'Retourne toutes les réservations ou uniquement celles correspondant à une date donnée.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'date',
+                description: 'Filtre les réservations pour une date précise.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'date',
+                    example: '2026-09-15'
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Liste des réservations.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(
+                                property: 'uuid',
+                                type: 'string',
+                                format: 'uuid',
+                                example: '550e8400-e29b-41d4-a716-446655440000'
+                            ),
+                            new OA\Property(
+                                property: 'guestNumber',
+                                type: 'integer',
+                                example: 4
+                            ),
+                            new OA\Property(
+                                property: 'bookingDate',
+                                type: 'string',
+                                format: 'date',
+                                example: '2026-09-15'
+                            ),
+                            new OA\Property(
+                                property: 'bookingTime',
+                                type: 'string',
+                                example: '19:00'
+                            ),
+                            new OA\Property(
+                                property: 'allergy',
+                                type: 'string',
+                                nullable: true,
+                                example: 'Aucune'
+                            ),
+                            new OA\Property(
+                                property: 'user',
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(
+                                        property: 'uuid',
+                                        type: 'string',
+                                        format: 'uuid',
+                                        nullable: true,
+                                        example: '550e8400-e29b-41d4-a716-446655440001'
+                                    ),
+                                    new OA\Property(
+                                        property: 'firstName',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'Hugo'
+                                    ),
+                                    new OA\Property(
+                                        property: 'lastName',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'Pollon'
+                                    ),
+                                    new OA\Property(
+                                        property: 'email',
+                                        type: 'string',
+                                        format: 'email',
+                                        nullable: true,
+                                        example: 'hugo@mail.fr'
+                                    ),
+                                ]
+                            ),
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Format de date invalide.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Token JWT absent ou invalide.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès refusé : rôle administrateur requis.'
+            ),
+        ]
+    )]
     public function index(
         Request $request,
         BookingRepository $bookingRepository
@@ -79,6 +191,127 @@ class AdminBookingController extends AbstractController
      * Modifie une réservation en tant qu'administrateur.
      */
     #[Route('/{uuid}', name: 'app_admin_booking_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/admin/bookings/{uuid}',
+        summary: 'Modifier une réservation',
+        description: 'Permet à un administrateur de modifier le nombre de convives, la date, l’heure et les allergies d’une réservation.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la réservation à modifier.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(
+                        property: 'guestNumber',
+                        type: 'integer',
+                        description: 'Nombre de convives.',
+                        example: 4
+                    ),
+                    new OA\Property(
+                        property: 'bookingDate',
+                        type: 'string',
+                        format: 'date',
+                        description: 'Nouvelle date de réservation.',
+                        example: '2026-09-15'
+                    ),
+                    new OA\Property(
+                        property: 'bookingTime',
+                        type: 'string',
+                        description: 'Nouvelle heure de réservation, par tranche de 15 minutes.',
+                        example: '19:00'
+                    ),
+                    new OA\Property(
+                        property: 'allergy',
+                        type: 'string',
+                        nullable: true,
+                        description: 'Allergies ou contraintes alimentaires.',
+                        example: 'Aucune'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Réservation modifiée avec succès.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Réservation modifiée avec succès.'
+                        ),
+                        new OA\Property(
+                            property: 'booking',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    example: '550e8400-e29b-41d4-a716-446655440000'
+                                ),
+                                new OA\Property(
+                                    property: 'guestNumber',
+                                    type: 'integer',
+                                    example: 4
+                                ),
+                                new OA\Property(
+                                    property: 'bookingDate',
+                                    type: 'string',
+                                    format: 'date',
+                                    example: '2026-09-15'
+                                ),
+                                new OA\Property(
+                                    property: 'bookingTime',
+                                    type: 'string',
+                                    example: '19:00'
+                                ),
+                                new OA\Property(
+                                    property: 'allergy',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'Aucune'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Données invalides ou capacité du service dépassée.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Token JWT absent ou invalide.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès refusé : rôle administrateur requis.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Réservation ou restaurant introuvable.'
+            ),
+        ]
+    )]
     public function update(
         string $uuid,
         Request $request,
@@ -400,6 +633,45 @@ class AdminBookingController extends AbstractController
      * Supprime une réservation en tant qu'administrateur.
      */
     #[Route('/{uuid}', name: 'app_admin_booking_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/admin/bookings/{uuid}',
+        summary: 'Supprimer une réservation',
+        description: 'Supprime définitivement une réservation.',
+        security: [
+            ['bearerAuth' => []],
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'uuid',
+                description: 'UUID de la réservation à supprimer.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'uuid'
+                ),
+                example: '550e8400-e29b-41d4-a716-446655440000'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Réservation supprimée avec succès.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Token JWT absent ou invalide.'
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Accès refusé : rôle administrateur requis.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Réservation introuvable.'
+            ),
+        ]
+    )]
     public function delete(
         string $uuid,
         BookingRepository $bookingRepository
