@@ -1,0 +1,27 @@
+# Symfony
+/backend/.env.local
+/backend/.env.local.php
+/backend/.env.*.local
+/backend/var/
+/backend/vendor/
+/backend/public/bundles/
+/backend/config/secrets/prod/prod.decrypt.private.php
+
+# JWT
+/backend/config/jwt/*.pem
+
+# Node.js
+/frontend/node_modules/
+
+# Fichiers npm
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.idea/
+.vscode/
