@@ -12,7 +12,8 @@ const allRoutes = [
     new Route(
         '/menus',
         'La carte',
-        '/pages/menus.html'
+        '/pages/menus.html',
+        '/js/menus.js'
     ),
 
     new Route(
