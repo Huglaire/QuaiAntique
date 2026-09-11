@@ -50,6 +50,7 @@ security:
         - { path: ^/api/foods$, roles: PUBLIC_ACCESS }
         - { path: ^/api/menus$, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
+        - { path: ^/api/pictures$, roles: PUBLIC_ACCESS }
 
         # Les autres routes de l'API nécessitent une authentification.
         - { path: ^/api, roles: ROLE_USER }
