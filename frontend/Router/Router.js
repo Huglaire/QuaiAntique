@@ -1,54 +1,47 @@
 import allRoutes from './allRoutes.js';
 
+import {
+    updateNavigation,
+    initLogout
+} from '../js/script.js';
+
 
 // Zone dans laquelle les pages sont affichées
-const mainPage =
-    document.getElementById('main-page');
+const mainPage = document.getElementById('main-page');
 
 
-/**
- * Affiche un titre et un message dans la page principale.
- */
-function displayMessage(titleText, messageText) {
-
-    mainPage.replaceChildren();
-
-
-    const section =
-        document.createElement('section');
-
-
-    const title =
-        document.createElement('h1');
-
-    title.textContent = titleText;
-
-
-    const message =
-        document.createElement('p');
-
-    message.textContent = messageText;
-
-
-    section.append(
-        title,
-        message
-    );
-
-
-    mainPage.append(section);
+// Met à jour la navigation
+async function refreshNavigation() {
+    await updateNavigation();
 }
 
 
-/**
- * Charge la page correspondant à l'URL.
- */
+// Affiche un message dans la zone principale
+function displayMessage(title, message) {
+    const section = document.createElement('section');
+    section.classList.add('container', 'py-5');
+
+    const heading = document.createElement('h1');
+    heading.textContent = title;
+
+    const paragraph = document.createElement('p');
+    paragraph.textContent = message;
+
+    section.append(
+        heading,
+        paragraph
+    );
+
+    mainPage.replaceChildren(section);
+}
+
+
+// Charge la page correspondant à l'URL
 async function loadRoute(path) {
 
     const route = allRoutes.find(
         (route) => route.path === path
     );
-
 
     // Affiche une erreur si la route n'existe pas
     if (!route) {
@@ -61,85 +54,75 @@ async function loadRoute(path) {
         document.title =
             'Page introuvable - Quai Antique';
 
+        await refreshNavigation();
+
         return;
     }
-
 
     try {
 
         // Récupère le contenu HTML de la page
-        const response =
-            await fetch(route.view);
-
+        const response = await fetch(route.view);
 
         if (!response.ok) {
-
             throw new Error(
                 `Impossible de charger ${route.view}`
             );
         }
 
+        const html = await response.text();
 
-        const html =
-            await response.text();
+        // Transforme le HTML reçu en document temporaire
+        const parser = new DOMParser();
 
+        const documentPage = parser.parseFromString(
+            html,
+            'text/html'
+        );
 
-        // Transforme le HTML récupéré en document
-        const parser =
-            new DOMParser();
-
-        const documentPage =
-            parser.parseFromString(
-                html,
-                'text/html'
-            );
-
-
-        // Remplace le contenu actuel de la page
+        // Injecte les éléments de la page dans le SPA
         mainPage.replaceChildren(
             ...Array.from(
                 documentPage.body.childNodes
             )
         );
 
-
         // Met à jour le titre de l'onglet
         document.title =
             `${route.title} - Quai Antique`;
 
-
-        // Charge le JavaScript propre à la page
+        // Charge le script associé à la page
         if (route.script) {
 
-            const pageModule =
-                await import(route.script);
+            const pageModule = await import(
+                route.script
+            );
 
-
-            // Lance l'initialisation de la page
             if (
                 typeof pageModule.init === 'function'
             ) {
-
                 pageModule.init();
             }
         }
+
+        // Met à jour la navigation
+        await refreshNavigation();
 
     } catch (error) {
 
         console.error(error);
 
-
         displayMessage(
             'Erreur',
             'Impossible de charger la page.'
         );
+
+        await refreshNavigation();
     }
 }
 
 
-/**
- * Gère la navigation interne.
- */
+// Gère la navigation interne
 function navigate(path) {
 
     window.history.pushState(
@@ -147,7 +130,6 @@ function navigate(path) {
         '',
         path
     );
-
 
     loadRoute(path);
 }
@@ -158,32 +140,33 @@ document.addEventListener(
     'click',
     (event) => {
 
-        const link =
-            event.target.closest('a');
-
+        const link = event.target.closest('a');
 
         if (!link) {
             return;
         }
 
+        // Laisse la gestion de la déconnexion
+        // au système d'authentification
+        if (
+            link.dataset.authAction === 'logout'
+        ) {
+            return;
+        }
 
         const url = new URL(
             link.href,
             window.location.origin
         );
 
-
         // Laisse les liens externes au navigateur
         if (
             url.origin !== window.location.origin
         ) {
-
             return;
         }
 
-
         event.preventDefault();
-
 
         navigate(url.pathname);
     }
@@ -194,12 +177,15 @@ document.addEventListener(
 window.addEventListener(
     'popstate',
     () => {
-
         loadRoute(
             window.location.pathname
         );
     }
 );
+
+
+// Initialise la gestion de la déconnexion
+initLogout();
 
 
 // Charge la page au démarrage
