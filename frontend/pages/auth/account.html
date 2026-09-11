@@ -4,9 +4,9 @@
 
 <section class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
+        <div class="col-12 col-lg-8">
 
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4 p-md-5">
 
                     <div class="text-center mb-4">
@@ -15,7 +15,8 @@
                         </h2>
 
                         <p class="mb-0">
-                            Retrouvez ici les informations de votre compte.
+                            Consultez et modifiez les informations
+                            de votre compte.
                         </p>
                     </div>
 
@@ -25,64 +26,133 @@
                         role="alert"
                     ></div>
 
-                    <dl class="row mb-4">
+                    <div
+                        id="account-success"
+                        class="alert alert-success d-none"
+                        role="alert"
+                    ></div>
 
-                        <dt class="col-sm-5">
-                            Prénom
-                        </dt>
+                    <form id="account-form" novalidate>
 
-                        <dd
-                            id="account-first-name"
-                            class="col-sm-7"
-                        ></dd>
+                        <div class="row">
 
-                        <dt class="col-sm-5">
-                            Nom
-                        </dt>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label
+                                    for="account-first-name"
+                                    class="form-label"
+                                >
+                                    Prénom
+                                </label>
 
-                        <dd
-                            id="account-last-name"
-                            class="col-sm-7"
-                        ></dd>
+                                <input
+                                    id="account-first-name"
+                                    name="firstName"
+                                    type="text"
+                                    class="form-control"
+                                    autocomplete="given-name"
+                                    required
+                                >
+                            </div>
 
-                        <dt class="col-sm-5">
-                            Adresse e-mail
-                        </dt>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label
+                                    for="account-last-name"
+                                    class="form-label"
+                                >
+                                    Nom
+                                </label>
 
-                        <dd
-                            id="account-email"
-                            class="col-sm-7"
-                        ></dd>
+                                <input
+                                    id="account-last-name"
+                                    name="lastName"
+                                    type="text"
+                                    class="form-control"
+                                    autocomplete="family-name"
+                                    required
+                                >
+                            </div>
 
-                        <dt class="col-sm-5">
-                            Nombre de personnes
-                        </dt>
+                            <div class="col-12 mb-3">
+                                <label
+                                    for="account-email"
+                                    class="form-label"
+                                >
+                                    Adresse e-mail
+                                </label>
 
-                        <dd
-                            id="account-guest-number"
-                            class="col-sm-7"
-                        ></dd>
+                                <input
+                                    id="account-email"
+                                    name="email"
+                                    type="email"
+                                    class="form-control"
+                                    autocomplete="email"
+                                    required
+                                >
+                            </div>
 
-                        <dt class="col-sm-5">
-                            Allergies
-                        </dt>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label
+                                    for="account-guest-number"
+                                    class="form-label"
+                                >
+                                    Nombre de personnes
+                                </label>
 
-                        <dd
-                            id="account-allergy"
-                            class="col-sm-7"
-                        ></dd>
+                                <input
+                                    id="account-guest-number"
+                                    name="guestNumber"
+                                    type="number"
+                                    class="form-control"
+                                    min="1"
+                                    max="50"
+                                    required
+                                >
+                            </div>
 
-                    </dl>
+                            <div class="col-12 mb-4">
+                                <label
+                                    for="account-allergy"
+                                    class="form-label"
+                                >
+                                    Allergies ou informations alimentaires
+                                </label>
 
-                    <div class="d-grid gap-2">
+                                <textarea
+                                    id="account-allergy"
+                                    name="allergy"
+                                    class="form-control"
+                                    rows="3"
+                                ></textarea>
+                            </div>
 
-                        <a
-                            href="/"
-                            class="btn btn-primary"
-                        >
-                            Retour à l'accueil
-                        </a>
+                        </div>
 
+                        <div class="d-grid">
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Enregistrer les modifications
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center">
+                        <h2 class="text-primary">
+                            Mon compte
+                        </h2>
+
+                        <p class="mb-0">
+                            D'autres options de gestion du compte
+                            seront disponibles prochainement.
+                        </p>
                     </div>
 
                 </div>
