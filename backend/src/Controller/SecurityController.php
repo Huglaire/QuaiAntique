@@ -190,6 +190,7 @@ final class SecurityController
         ], JsonResponse::HTTP_CREATED);
     }
 
+
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
     #[OA\Get(
         path: '/api/me',
@@ -232,11 +233,12 @@ final class SecurityController
         ]);
     }
 
+
     #[Route('/api/me', name: 'api_me_update', methods: ['PATCH'])]
     #[OA\Patch(
         path: '/api/me',
         summary: 'Modifier le compte connecté',
-        description: 'Modifie les informations autorisées du compte utilisateur connecté.',
+        description: 'Modifie les informations personnelles du compte utilisateur connecté.',
         tags: ['Authentification et compte'],
         security: [
             ['bearerAuth' => []],
@@ -282,12 +284,6 @@ final class SecurityController
                     example: 'nouvelle-adresse@example.fr'
                 ),
                 new OA\Property(
-                    property: 'password',
-                    type: 'string',
-                    format: 'password',
-                    example: 'nouveauMotDePasse123'
-                ),
-                new OA\Property(
                     property: 'guestNumber',
                     type: 'integer',
                     example: 4
@@ -304,8 +300,7 @@ final class SecurityController
     public function update(
         Request $request,
         #[CurrentUser] ?User $user,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        EntityManagerInterface $entityManager
     ): JsonResponse {
         // Vérifie qu'un utilisateur authentifié est disponible.
         if ($user === null) {
@@ -361,20 +356,6 @@ final class SecurityController
             $user->setAllergy($data['allergy']);
         }
 
-        // Si un nouveau mot de passe est fourni, il est haché avant
-        // d'être enregistré en base de données.
-        if (
-            array_key_exists('password', $data)
-            && $data['password'] !== ''
-        ) {
-            $hashedPassword = $passwordHasher->hashPassword(
-                $user,
-                $data['password']
-            );
-
-            $user->setPassword($hashedPassword);
-        }
-
         // Met à jour la date de modification.
         $user->setUpdatedAt(
             new \DateTimeImmutable()
@@ -397,6 +378,142 @@ final class SecurityController
             ],
         ]);
     }
+
+
+    #[Route('/api/me/password', name: 'api_me_password_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        path: '/api/me/password',
+        summary: 'Modifier le mot de passe',
+        description: 'Modifie le mot de passe de l’utilisateur connecté après vérification de son ancien mot de passe.',
+        tags: ['Authentification et compte'],
+        security: [
+            ['bearerAuth' => []],
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Mot de passe modifié avec succès.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Les données envoyées sont invalides.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Utilisateur non authentifié ou ancien mot de passe incorrect.'
+            ),
+        ]
+    )]
+    #[OA\RequestBody(
+        description: 'Ancien et nouveau mot de passe.',
+        required: true,
+        content: new OA\JsonContent(
+            required: [
+                'currentPassword',
+                'newPassword',
+            ],
+            properties: [
+                new OA\Property(
+                    property: 'currentPassword',
+                    type: 'string',
+                    format: 'password',
+                    example: 'motdepasseactuel'
+                ),
+                new OA\Property(
+                    property: 'newPassword',
+                    type: 'string',
+                    format: 'password',
+                    example: 'nouveauMotDePasse123'
+                ),
+            ]
+        )
+    )]
+    public function updatePassword(
+        Request $request,
+        #[CurrentUser] ?User $user,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        // Vérifie qu'un utilisateur authentifié est disponible.
+        if ($user === null) {
+            return new JsonResponse([
+                'message' => 'Utilisateur non authentifié.'
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupère les données JSON envoyées dans la requête.
+        $data = json_decode($request->getContent(), true);
+
+        // Vérifie que les données reçues sont bien au format attendu.
+        if (!is_array($data)) {
+            return new JsonResponse([
+                'message' => 'Les données envoyées sont invalides.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $currentPassword =
+            $data['currentPassword'] ?? '';
+
+        $newPassword =
+            $data['newPassword'] ?? '';
+
+        // Vérifie la présence des deux mots de passe.
+        if (
+            $currentPassword === ''
+            || $newPassword === ''
+        ) {
+            return new JsonResponse([
+                'message' => 'Les deux mots de passe sont obligatoires.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que l'ancien mot de passe est correct.
+        if (
+            !$passwordHasher->isPasswordValid(
+                $user,
+                $currentPassword
+            )
+        ) {
+            return new JsonResponse([
+                'message' => 'Votre ancien mot de passe est incorrect.'
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Vérifie que le nouveau mot de passe respecte une longueur minimale.
+        if (strlen($newPassword) < 8) {
+            return new JsonResponse([
+                'message' => 'Le nouveau mot de passe doit contenir au moins 8 caractères.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie que le nouveau mot de passe est différent de l'ancien.
+        if ($currentPassword === $newPassword) {
+            return new JsonResponse([
+                'message' => 'Le nouveau mot de passe doit être différent de l’ancien.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Hache le nouveau mot de passe avant son enregistrement.
+        $hashedPassword = $passwordHasher->hashPassword(
+            $user,
+            $newPassword
+        );
+
+        $user->setPassword($hashedPassword);
+
+        // Met à jour la date de modification.
+        $user->setUpdatedAt(
+            new \DateTimeImmutable()
+        );
+
+        // Enregistre le nouveau mot de passe.
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'message' => 'Mot de passe modifié avec succès.'
+        ], JsonResponse::HTTP_OK);
+    }
+
 
     #[Route('/api/me', name: 'api_me_delete', methods: ['DELETE'])]
     #[OA\Delete(

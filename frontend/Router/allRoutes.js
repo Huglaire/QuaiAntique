@@ -1,6 +1,5 @@
 import Route from './Route.js';
 
-
 // Liste des routes de l'application
 const allRoutes = [
     new Route(
@@ -46,11 +45,18 @@ const allRoutes = [
     ),
 
     new Route(
+        '/compte/mot-de-passe',
+        'Modifier mon mot de passe',
+        '/pages/auth/editPassword.html',
+        '/js/auth/editPassword.js',
+        ['ROLE_USER']
+    ),
+
+    new Route(
         '/reservation',
         'Réservation',
         '/pages/reservation.html'
     )
 ];
-
 
 export default allRoutes;
