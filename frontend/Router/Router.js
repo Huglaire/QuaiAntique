@@ -1,6 +1,8 @@
 import allRoutes from './allRoutes.js';
 
 import {
+    getCurrentUser,
+    isAuthenticated,
     updateNavigation,
     initLogout
 } from '../js/script.js';
@@ -36,6 +38,28 @@ function displayMessage(title, message) {
 }
 
 
+// Vérifie si l'utilisateur possède le rôle nécessaire
+async function checkRouteAccess(route) {
+    if (!route.roles || route.roles.length === 0) {
+        return true;
+    }
+
+    if (!isAuthenticated()) {
+        return false;
+    }
+
+    const user = await getCurrentUser();
+
+    if (!user) {
+        return false;
+    }
+
+    return route.roles.some(
+        (role) => user.roles?.includes(role)
+    );
+}
+
+
 // Charge la page correspondant à l'URL
 async function loadRoute(path) {
 
@@ -55,6 +79,22 @@ async function loadRoute(path) {
             'Page introuvable - Quai Antique';
 
         await refreshNavigation();
+
+        return;
+    }
+
+    // Vérifie les droits d'accès à la route
+    const hasAccess = await checkRouteAccess(route);
+
+    if (!hasAccess) {
+
+        window.history.pushState(
+            {},
+            '',
+            '/connexion'
+        );
+
+        await loadRoute('/connexion');
 
         return;
     }
@@ -101,7 +141,7 @@ async function loadRoute(path) {
             if (
                 typeof pageModule.init === 'function'
             ) {
-                pageModule.init();
+                await pageModule.init();
             }
         }
 
