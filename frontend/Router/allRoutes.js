@@ -2,7 +2,6 @@ import Route from './Route.js';
 
 // Liste des routes publiques de l'application
 const allRoutes = [
-
     new Route(
         '/',
         'Accueil',
@@ -19,19 +18,22 @@ const allRoutes = [
     new Route(
         '/galerie',
         'Galerie',
-        '/pages/galerie.html'
+        '/pages/galerie.html',
+        '/js/galerie.js'
     ),
 
     new Route(
         '/connexion',
         'Connexion',
-        '/pages/connexion.html'
+        '/pages/auth/signin.html',
+        '/js/auth/signin.js'
     ),
 
     new Route(
         '/inscription',
         'Inscription',
-        '/pages/inscription.html'
+        '/pages/auth/signup.html',
+        '/js/auth/signup.js'
     ),
 
     new Route(
