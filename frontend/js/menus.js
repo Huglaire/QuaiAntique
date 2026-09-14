@@ -3,13 +3,19 @@ const API_URL = 'http://127.0.0.1:8000/api';
 
 /**
  * Crée un élément HTML avec une classe CSS.
+ *
+ * @param {string} tagName
+ * @param {string} className
+ * @returns {HTMLElement}
  */
 function createElement(tagName, className = '') {
 
     const element = document.createElement(tagName);
 
     if (className) {
-        element.classList.add(...className.split(' '));
+        element.classList.add(
+            ...className.split(' ')
+        );
     }
 
     return element;
@@ -18,6 +24,9 @@ function createElement(tagName, className = '') {
 
 /**
  * Crée une carte représentant un menu.
+ *
+ * @param {Object} menu
+ * @returns {HTMLElement}
  */
 function createMenuCard(menu) {
 
@@ -46,51 +55,58 @@ function createMenuCard(menu) {
         'h4 card-title mb-0'
     );
 
-    title.textContent = menu.title;
+    title.textContent =
+        menu.title;
 
     const price = createElement(
         'p',
         'fw-bold mb-0'
     );
 
-    price.textContent = `${menu.price} €`;
+    price.textContent =
+        `${menu.price} €`;
 
-    header.append(title, price);
-
+    header.append(
+        title,
+        price
+    );
 
     const description = createElement(
         'p',
         'card-text'
     );
 
-    description.textContent = menu.description;
-
+    description.textContent =
+        menu.description;
 
     const compositionTitle = createElement(
         'h3',
         'h5 mt-2'
     );
 
-    compositionTitle.textContent = 'Composition';
-
+    compositionTitle.textContent =
+        'Composition';
 
     const foodsList = createElement(
         'ul',
         'mb-0'
     );
 
-
     if (Array.isArray(menu.foods)) {
 
         menu.foods.forEach((food) => {
 
-            const foodItem = createElement('li');
+            const foodItem =
+                createElement('li');
 
-            const foodName = createElement('span');
+            const foodName =
+                createElement('span');
 
-            foodName.textContent = food.title;
+            foodName.textContent =
+                food.title;
 
-            const foodPrice = createElement('span');
+            const foodPrice =
+                createElement('span');
 
             foodPrice.textContent =
                 ` — ${food.price} €`;
@@ -100,10 +116,11 @@ function createMenuCard(menu) {
                 foodPrice
             );
 
-            foodsList.append(foodItem);
+            foodsList.append(
+                foodItem
+            );
         });
     }
-
 
     cardBody.append(
         header,
@@ -112,9 +129,13 @@ function createMenuCard(menu) {
         foodsList
     );
 
-    card.append(cardBody);
+    card.append(
+        cardBody
+    );
 
-    column.append(card);
+    column.append(
+        card
+    );
 
     return column;
 }
@@ -122,35 +143,46 @@ function createMenuCard(menu) {
 
 /**
  * Affiche les menus dans la page.
+ *
+ * @param {Array} menus
+ * @param {HTMLElement} container
  */
-function renderMenus(menus, container) {
+function renderMenus(
+    menus,
+    container
+) {
 
     container.replaceChildren();
 
-
-    if (!Array.isArray(menus) || menus.length === 0) {
+    if (
+        !Array.isArray(menus)
+        || menus.length === 0
+    ) {
 
         const column = createElement(
             'div',
             'col-12 text-center'
         );
 
-        const message = createElement('p');
+        const message =
+            createElement('p');
 
         message.textContent =
             'Aucun menu n’est disponible pour le moment.';
 
-        column.append(message);
+        column.append(
+            message
+        );
 
-        container.append(column);
+        container.append(
+            column
+        );
 
         return;
     }
 
-
     const fragment =
         document.createDocumentFragment();
-
 
     menus.forEach((menu) => {
 
@@ -159,66 +191,373 @@ function renderMenus(menus, container) {
         );
     });
 
-
-    container.append(fragment);
+    container.append(
+        fragment
+    );
 }
 
 
 /**
- * Affiche un message d'erreur dans la page.
+ * Crée une carte représentant un plat.
+ *
+ * @param {Object} food
+ * @returns {HTMLElement}
  */
-function renderError(container) {
+function createFoodCard(food) {
+
+    const column = createElement(
+        'article',
+        'col-12 col-md-6 col-lg-4'
+    );
+
+    const card = createElement(
+        'div',
+        'card h-100'
+    );
+
+    const cardBody = createElement(
+        'div',
+        'card-body d-flex flex-column'
+    );
+
+    const header = createElement(
+        'div',
+        'd-flex justify-content-between gap-3 mb-3'
+    );
+
+    const title = createElement(
+        'h3',
+        'h5 card-title mb-0'
+    );
+
+    title.textContent =
+        food.title;
+
+    const price = createElement(
+        'p',
+        'fw-bold mb-0 text-nowrap'
+    );
+
+    price.textContent =
+        `${food.price} €`;
+
+    header.append(
+        title,
+        price
+    );
+
+    const description =
+        createElement(
+            'p',
+            'card-text mb-0'
+        );
+
+    description.textContent =
+        food.description;
+
+    cardBody.append(
+        header,
+        description
+    );
+
+    card.append(
+        cardBody
+    );
+
+    column.append(
+        card
+    );
+
+    return column;
+}
+
+
+/**
+ * Crée une section correspondant à une catégorie de plats.
+ *
+ * @param {string} categoryTitle
+ * @param {Array} foods
+ * @returns {HTMLElement}
+ */
+function createFoodCategory(
+    categoryTitle,
+    foods
+) {
+
+    const section =
+        createElement(
+            'section',
+            'mb-5'
+        );
+
+    const heading =
+        createElement(
+            'h3',
+            'text-primary mb-4'
+        );
+
+    heading.textContent =
+        categoryTitle;
+
+    const grid =
+        createElement(
+            'div',
+            'row g-4'
+        );
+
+    foods.forEach((food) => {
+
+        grid.append(
+            createFoodCard(food)
+        );
+    });
+
+    section.append(
+        heading,
+        grid
+    );
+
+    return section;
+}
+
+
+/**
+ * Affiche les plats regroupés par catégorie.
+ *
+ * @param {Array} foods
+ * @param {HTMLElement} container
+ */
+function renderFoods(
+    foods,
+    container
+) {
 
     container.replaceChildren();
 
+    if (
+        !Array.isArray(foods)
+        || foods.length === 0
+    ) {
+
+        const message =
+            createElement('p');
+
+        message.classList.add(
+            'text-center'
+        );
+
+        message.textContent =
+            'Aucun plat n’est disponible pour le moment.';
+
+        container.append(
+            message
+        );
+
+        return;
+    }
+
+    /*
+     * Définit l'ordre d'affichage des catégories.
+     */
+    const categoryOrder = [
+        'Entrées',
+        'Plats',
+        'Desserts'
+    ];
+
+    /*
+     * Regroupe les plats par catégorie.
+     */
+    const foodsByCategory = new Map();
+
+    categoryOrder.forEach(
+        (category) => {
+            foodsByCategory.set(
+                category,
+                []
+            );
+        }
+    );
+
+    foods.forEach((food) => {
+
+        const categoryTitle =
+            food.category?.title;
+
+        if (
+            !foodsByCategory.has(
+                categoryTitle
+            )
+        ) {
+            return;
+        }
+
+        foodsByCategory
+            .get(categoryTitle)
+            .push(food);
+    });
+
+    const fragment =
+        document.createDocumentFragment();
+
+    categoryOrder.forEach(
+        (categoryTitle) => {
+
+            const categoryFoods =
+                foodsByCategory.get(
+                    categoryTitle
+                );
+
+            if (
+                !categoryFoods
+                || categoryFoods.length === 0
+            ) {
+                return;
+            }
+
+            /*
+             * Trie les plats par ordre alphabétique
+             * à l'intérieur de leur catégorie.
+             */
+            categoryFoods.sort(
+                (foodA, foodB) =>
+                    foodA.title.localeCompare(
+                        foodB.title,
+                        'fr'
+                    )
+            );
+
+            fragment.append(
+                createFoodCategory(
+                    categoryTitle,
+                    categoryFoods
+                )
+            );
+        }
+    );
+
+    container.append(
+        fragment
+    );
+}
+
+
+/**
+ * Affiche un message d'erreur pour les menus.
+ *
+ * @param {HTMLElement} container
+ */
+function renderMenuError(container) {
+
+    container.replaceChildren();
 
     const column = createElement(
         'div',
         'col-12 text-center'
     );
 
-    const message = createElement('p');
+    const message =
+        createElement('p');
 
     message.textContent =
         'Impossible de charger les menus pour le moment.';
 
-    column.append(message);
+    column.append(
+        message
+    );
 
-    container.append(column);
+    container.append(
+        column
+    );
+}
+
+
+/**
+ * Affiche un message d'erreur pour les plats.
+ *
+ * @param {HTMLElement} container
+ */
+function renderFoodError(container) {
+
+    container.replaceChildren();
+
+    const message =
+        createElement(
+            'p',
+            'text-center'
+        );
+
+    message.textContent =
+        'Impossible de charger les plats pour le moment.';
+
+    container.append(
+        message
+    );
 }
 
 
 /**
  * Récupère les menus depuis l'API Symfony.
+ *
+ * @returns {Promise<Array>}
+ */
+async function fetchMenus() {
+
+    const response =
+        await fetch(
+            `${API_URL}/menus`
+        );
+
+    if (!response.ok) {
+        throw new Error(
+            'Impossible de récupérer les menus.'
+        );
+    }
+
+    return await response.json();
+}
+
+
+/**
+ * Récupère les plats depuis l'API Symfony.
+ *
+ * @returns {Promise<Array>}
+ */
+async function fetchFoods() {
+
+    const response =
+        await fetch(
+            `${API_URL}/foods`
+        );
+
+    if (!response.ok) {
+        throw new Error(
+            'Impossible de récupérer les plats.'
+        );
+    }
+
+    return await response.json();
+}
+
+
+/**
+ * Charge les menus et les affiche dans la page.
  */
 async function loadMenus() {
 
     const container =
-        document.getElementById('menus-container');
-
+        document.getElementById(
+            'menus-container'
+        );
 
     if (!container) {
         return;
     }
 
-
     try {
 
-        const response =
-            await fetch(`${API_URL}/menus`);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                'Impossible de récupérer les menus.'
-            );
-        }
-
-
         const menus =
-            await response.json();
-
+            await fetchMenus();
 
         renderMenus(
             menus,
@@ -229,7 +568,44 @@ async function loadMenus() {
 
         console.error(error);
 
-        renderError(container);
+        renderMenuError(
+            container
+        );
+    }
+}
+
+
+/**
+ * Charge les plats et les affiche dans la page.
+ */
+async function loadFoods() {
+
+    const container =
+        document.getElementById(
+            'foods-container'
+        );
+
+    if (!container) {
+        return;
+    }
+
+    try {
+
+        const foods =
+            await fetchFoods();
+
+        renderFoods(
+            foods,
+            container
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        renderFoodError(
+            container
+        );
     }
 }
 
@@ -240,4 +616,5 @@ async function loadMenus() {
 export function init() {
 
     loadMenus();
+    loadFoods();
 }
