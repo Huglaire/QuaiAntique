@@ -1,0 +1,136 @@
+<section class="page-hero">
+    <h1>Réserver une table</h1>
+</section>
+
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <h2 class="text-primary">
+                            Votre réservation
+                        </h2>
+
+                        <p class="mb-0">
+                            Choisissez la date, le nombre de personnes
+                            et l'heure de votre réservation.
+                        </p>
+                    </div>
+
+                    <div
+                        id="reservation-error"
+                        class="alert alert-danger d-none"
+                        role="alert"
+                    ></div>
+
+                    <div
+                        id="reservation-success"
+                        class="alert alert-success d-none"
+                        role="alert"
+                    ></div>
+
+                    <form
+                        id="reservation-form"
+                        novalidate
+                    >
+
+                        <div class="row">
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label
+                                    for="reservation-guest-number"
+                                    class="form-label"
+                                >
+                                    Nombre de personnes
+                                </label>
+
+                                <input
+                                    id="reservation-guest-number"
+                                    name="guestNumber"
+                                    type="number"
+                                    class="form-control"
+                                    min="1"
+                                    max="50"
+                                    required
+                                >
+                            </div>
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label
+                                    for="reservation-date"
+                                    class="form-label"
+                                >
+                                    Date
+                                </label>
+
+                                <input
+                                    id="reservation-date"
+                                    name="bookingDate"
+                                    type="date"
+                                    class="form-control"
+                                    required
+                                >
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="reservation-allergy"
+                                class="form-label"
+                            >
+                                Allergies ou informations alimentaires
+                            </label>
+
+                            <textarea
+                                id="reservation-allergy"
+                                name="allergy"
+                                class="form-control"
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="mb-4">
+
+                            <h3 class="h5 mb-3">
+                                Choisissez votre horaire
+                            </h3>
+
+                            <div
+                                id="reservation-slots"
+                            >
+                                <p class="text-muted mb-0">
+                                    Sélectionnez une date pour afficher
+                                    les créneaux disponibles.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <input
+                            id="reservation-time"
+                            name="bookingTime"
+                            type="hidden"
+                            required
+                        >
+
+                        <div class="d-grid">
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Confirmer la réservation
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
