@@ -74,6 +74,14 @@ const allRoutes = [
         '/pages/admin/dashboard.html',
         null,
         ['ROLE_ADMIN']
+    ),
+
+    new Route(
+        '/admin/reservations',
+        'Gestion des réservations',
+        '/pages/admin/bookings.html',
+        '/js/admin/bookings.js',
+        ['ROLE_ADMIN']
     )
 ];
 

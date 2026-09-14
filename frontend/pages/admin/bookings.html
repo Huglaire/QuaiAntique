@@ -1,0 +1,63 @@
+<section class="page-hero">
+    <h1>Gestion des réservations</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Réservations
+        </h2>
+
+        <p>
+            Consultez et gérez les réservations du restaurant.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <div class="row align-items-end g-3">
+
+                <div class="col-md-6">
+                    <label
+                        for="booking-date"
+                        class="form-label"
+                    >
+                        Filtrer par date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="booking-date"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="col-md-6">
+                    <button
+                        type="button"
+                        id="reset-date"
+                        class="btn btn-secondary"
+                    >
+                        Afficher toutes les réservations
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div
+        id="bookings-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div
+        id="bookings-container"
+        class="row g-4"
+    ></div>
+
+</section>
