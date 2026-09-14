@@ -58,6 +58,14 @@ const allRoutes = [
         '/pages/reservations/reserver.html',
         '/js/reservations/reserver.js',
         ['ROLE_USER']
+    ),
+
+    new Route(
+        '/reservations',
+        'Mes réservations',
+        '/pages/reservations/allResa.html',
+        '/js/reservations/allResa.js',
+        ['ROLE_USER']
     )
 ];
 
