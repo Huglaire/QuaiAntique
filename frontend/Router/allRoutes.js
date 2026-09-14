@@ -82,6 +82,14 @@ const allRoutes = [
         '/pages/admin/bookings.html',
         '/js/admin/bookings.js',
         ['ROLE_ADMIN']
+    ),
+
+    new Route(
+        '/admin/restaurant',
+        'Informations du restaurant',
+        '/pages/admin/restaurant.html',
+        '/js/admin/restaurant.js',
+        ['ROLE_ADMIN']
     )
 ];
 

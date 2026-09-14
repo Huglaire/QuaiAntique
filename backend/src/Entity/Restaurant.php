@@ -29,7 +29,13 @@ class Restaurant
     private ?\DateTime $lunchOpeningTime = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTime $lunchClosingTime = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTime $dinnerOpeningTime = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTime $dinnerClosingTime = null;
 
     #[ORM\Column(type: Types::SMALLINT)]
     private ?int $maxGuest = null;
@@ -125,6 +131,18 @@ class Restaurant
         return $this;
     }
 
+    public function getLunchClosingTime(): ?\DateTime
+    {
+        return $this->lunchClosingTime;
+    }
+
+    public function setLunchClosingTime(\DateTime $lunchClosingTime): static
+    {
+        $this->lunchClosingTime = $lunchClosingTime;
+
+        return $this;
+    }
+
     public function getDinnerOpeningTime(): ?\DateTime
     {
         return $this->dinnerOpeningTime;
@@ -133,6 +151,18 @@ class Restaurant
     public function setDinnerOpeningTime(\DateTime $dinnerOpeningTime): static
     {
         $this->dinnerOpeningTime = $dinnerOpeningTime;
+
+        return $this;
+    }
+
+    public function getDinnerClosingTime(): ?\DateTime
+    {
+        return $this->dinnerClosingTime;
+    }
+
+    public function setDinnerClosingTime(\DateTime $dinnerClosingTime): static
+    {
+        $this->dinnerClosingTime = $dinnerClosingTime;
 
         return $this;
     }
@@ -194,7 +224,7 @@ class Restaurant
     public function removePicture(Picture $picture): static
     {
         if ($this->pictures->removeElement($picture)) {
-            // set the owning side to null (unless already changed)
+            // Détache la relation du côté propriétaire.
             if ($picture->getRestaurant() === $this) {
                 $picture->setRestaurant(null);
             }
@@ -224,7 +254,7 @@ class Restaurant
     public function removeFood(Food $food): static
     {
         if ($this->foods->removeElement($food)) {
-            // set the owning side to null (unless already changed)
+            // Détache la relation du côté propriétaire.
             if ($food->getRestaurant() === $this) {
                 $food->setRestaurant(null);
             }
@@ -254,7 +284,7 @@ class Restaurant
     public function removeMenu(Menu $menu): static
     {
         if ($this->menus->removeElement($menu)) {
-            // set the owning side to null (unless already changed)
+            // Détache la relation du côté propriétaire.
             if ($menu->getRestaurant() === $this) {
                 $menu->setRestaurant(null);
             }
@@ -284,7 +314,7 @@ class Restaurant
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // set the owning side to null (unless already changed)
+            // Détache la relation du côté propriétaire.
             if ($booking->getRestaurant() === $this) {
                 $booking->setRestaurant(null);
             }

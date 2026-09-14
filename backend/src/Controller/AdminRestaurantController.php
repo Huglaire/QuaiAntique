@@ -59,10 +59,22 @@ class AdminRestaurantController
                             example: '12:00'
                         ),
                         new OA\Property(
+                            property: 'lunchClosingTime',
+                            type: 'string',
+                            nullable: true,
+                            example: '14:00'
+                        ),
+                        new OA\Property(
                             property: 'dinnerOpeningTime',
                             type: 'string',
                             nullable: true,
                             example: '19:00'
+                        ),
+                        new OA\Property(
+                            property: 'dinnerClosingTime',
+                            type: 'string',
+                            nullable: true,
+                            example: '21:00'
                         ),
                         new OA\Property(
                             property: 'maxGuest',
@@ -111,8 +123,14 @@ class AdminRestaurantController
             'lunchOpeningTime' => $restaurant
                 ->getLunchOpeningTime()
                 ?->format('H:i'),
+            'lunchClosingTime' => $restaurant
+                ->getLunchClosingTime()
+                ?->format('H:i'),
             'dinnerOpeningTime' => $restaurant
                 ->getDinnerOpeningTime()
+                ?->format('H:i'),
+            'dinnerClosingTime' => $restaurant
+                ->getDinnerClosingTime()
                 ?->format('H:i'),
             'maxGuest' => $restaurant->getMaxGuest(),
         ], JsonResponse::HTTP_OK);
@@ -125,7 +143,7 @@ class AdminRestaurantController
     #[OA\Patch(
         path: '/api/admin/restaurant',
         summary: 'Modifier les informations du restaurant',
-        description: 'Permet à un administrateur de modifier les horaires d’ouverture du midi et du soir ainsi que la capacité maximale du restaurant.',
+        description: 'Permet à un administrateur de modifier les horaires d’ouverture et de fermeture du midi et du soir ainsi que la capacité maximale du restaurant.',
         security: [
             ['bearerAuth' => []],
         ],
@@ -141,10 +159,22 @@ class AdminRestaurantController
                         example: '12:00'
                     ),
                     new OA\Property(
+                        property: 'lunchClosingTime',
+                        type: 'string',
+                        description: 'Heure de fermeture du service du midi au format HH:MM.',
+                        example: '14:00'
+                    ),
+                    new OA\Property(
                         property: 'dinnerOpeningTime',
                         type: 'string',
                         description: 'Heure d’ouverture du service du soir au format HH:MM.',
                         example: '19:00'
+                    ),
+                    new OA\Property(
+                        property: 'dinnerClosingTime',
+                        type: 'string',
+                        description: 'Heure de fermeture du service du soir au format HH:MM.',
+                        example: '21:00'
                     ),
                     new OA\Property(
                         property: 'maxGuest',
@@ -194,10 +224,22 @@ class AdminRestaurantController
                                     example: '12:00'
                                 ),
                                 new OA\Property(
+                                    property: 'lunchClosingTime',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '14:00'
+                                ),
+                                new OA\Property(
                                     property: 'dinnerOpeningTime',
                                     type: 'string',
                                     nullable: true,
                                     example: '19:00'
+                                ),
+                                new OA\Property(
+                                    property: 'dinnerClosingTime',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: '21:00'
                                 ),
                                 new OA\Property(
                                     property: 'maxGuest',
@@ -259,7 +301,9 @@ class AdminRestaurantController
          */
         $allowedFields = [
             'lunchOpeningTime',
+            'lunchClosingTime',
             'dinnerOpeningTime',
+            'dinnerClosingTime',
             'maxGuest',
         ];
 
@@ -282,9 +326,11 @@ class AdminRestaurantController
         }
 
         /*
-         * Heure d'ouverture du service du midi.
+         * Vérifie et prépare l'heure d'ouverture du midi.
          * Si le champ n'est pas envoyé, on conserve la valeur actuelle.
          */
+        $lunchOpeningTime = $restaurant->getLunchOpeningTime();
+
         if (array_key_exists('lunchOpeningTime', $data)) {
             if (
                 !is_string($data['lunchOpeningTime'])
@@ -294,7 +340,7 @@ class AdminRestaurantController
                 )
             ) {
                 return new JsonResponse([
-                    'message' => 'L\'heure du midi doit respecter le format HH:MM.',
+                    'message' => 'L\'heure d\'ouverture du midi doit respecter le format HH:MM.',
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
@@ -312,14 +358,62 @@ class AdminRestaurantController
                     'message' => 'L\'heure d\'ouverture du midi est invalide.',
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
-
-            $restaurant->setLunchOpeningTime($lunchOpeningTime);
         }
 
         /*
-         * Heure d'ouverture du service du soir.
+         * Vérifie et prépare l'heure de fermeture du midi.
          * Si le champ n'est pas envoyé, on conserve la valeur actuelle.
          */
+        $lunchClosingTime = $restaurant->getLunchClosingTime();
+
+        if (array_key_exists('lunchClosingTime', $data)) {
+            if (
+                !is_string($data['lunchClosingTime'])
+                || !preg_match(
+                    '/^\d{2}:\d{2}$/',
+                    $data['lunchClosingTime']
+                )
+            ) {
+                return new JsonResponse([
+                    'message' => 'L\'heure de fermeture du midi doit respecter le format HH:MM.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $lunchClosingTime = \DateTime::createFromFormat(
+                'H:i',
+                $data['lunchClosingTime']
+            );
+
+            if (
+                $lunchClosingTime === false
+                || $lunchClosingTime->format('H:i')
+                    !== $data['lunchClosingTime']
+            ) {
+                return new JsonResponse([
+                    'message' => 'L\'heure de fermeture du midi est invalide.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+        }
+
+        /*
+         * Vérifie que la fermeture du midi est après son ouverture.
+         */
+        if (
+            $lunchOpeningTime !== null
+            && $lunchClosingTime !== null
+            && $lunchClosingTime <= $lunchOpeningTime
+        ) {
+            return new JsonResponse([
+                'message' => 'L\'heure de fermeture du midi doit être après l\'heure d\'ouverture.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        /*
+         * Vérifie et prépare l'heure d'ouverture du soir.
+         * Si le champ n'est pas envoyé, on conserve la valeur actuelle.
+         */
+        $dinnerOpeningTime = $restaurant->getDinnerOpeningTime();
+
         if (array_key_exists('dinnerOpeningTime', $data)) {
             if (
                 !is_string($data['dinnerOpeningTime'])
@@ -329,7 +423,7 @@ class AdminRestaurantController
                 )
             ) {
                 return new JsonResponse([
-                    'message' => 'L\'heure du soir doit respecter le format HH:MM.',
+                    'message' => 'L\'heure d\'ouverture du soir doit respecter le format HH:MM.',
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
@@ -347,8 +441,54 @@ class AdminRestaurantController
                     'message' => 'L\'heure d\'ouverture du soir est invalide.',
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
+        }
 
-            $restaurant->setDinnerOpeningTime($dinnerOpeningTime);
+        /*
+         * Vérifie et prépare l'heure de fermeture du soir.
+         * Si le champ n'est pas envoyé, on conserve la valeur actuelle.
+         */
+        $dinnerClosingTime = $restaurant->getDinnerClosingTime();
+
+        if (array_key_exists('dinnerClosingTime', $data)) {
+            if (
+                !is_string($data['dinnerClosingTime'])
+                || !preg_match(
+                    '/^\d{2}:\d{2}$/',
+                    $data['dinnerClosingTime']
+                )
+            ) {
+                return new JsonResponse([
+                    'message' => 'L\'heure de fermeture du soir doit respecter le format HH:MM.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $dinnerClosingTime = \DateTime::createFromFormat(
+                'H:i',
+                $data['dinnerClosingTime']
+            );
+
+            if (
+                $dinnerClosingTime === false
+                || $dinnerClosingTime->format('H:i')
+                    !== $data['dinnerClosingTime']
+            ) {
+                return new JsonResponse([
+                    'message' => 'L\'heure de fermeture du soir est invalide.',
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+        }
+
+        /*
+         * Vérifie que la fermeture du soir est après son ouverture.
+         */
+        if (
+            $dinnerOpeningTime !== null
+            && $dinnerClosingTime !== null
+            && $dinnerClosingTime <= $dinnerOpeningTime
+        ) {
+            return new JsonResponse([
+                'message' => 'L\'heure de fermeture du soir doit être après l\'heure d\'ouverture.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         /*
@@ -366,6 +506,23 @@ class AdminRestaurantController
             }
 
             $restaurant->setMaxGuest($data['maxGuest']);
+        }
+
+        // Applique les horaires éventuellement modifiés.
+        if (array_key_exists('lunchOpeningTime', $data)) {
+            $restaurant->setLunchOpeningTime($lunchOpeningTime);
+        }
+
+        if (array_key_exists('lunchClosingTime', $data)) {
+            $restaurant->setLunchClosingTime($lunchClosingTime);
+        }
+
+        if (array_key_exists('dinnerOpeningTime', $data)) {
+            $restaurant->setDinnerOpeningTime($dinnerOpeningTime);
+        }
+
+        if (array_key_exists('dinnerClosingTime', $data)) {
+            $restaurant->setDinnerClosingTime($dinnerClosingTime);
         }
 
         // Met à jour la date de modification.
@@ -386,8 +543,14 @@ class AdminRestaurantController
                 'lunchOpeningTime' => $restaurant
                     ->getLunchOpeningTime()
                     ?->format('H:i'),
+                'lunchClosingTime' => $restaurant
+                    ->getLunchClosingTime()
+                    ?->format('H:i'),
                 'dinnerOpeningTime' => $restaurant
                     ->getDinnerOpeningTime()
+                    ?->format('H:i'),
+                'dinnerClosingTime' => $restaurant
+                    ->getDinnerClosingTime()
                     ?->format('H:i'),
                 'maxGuest' => $restaurant->getMaxGuest(),
             ],

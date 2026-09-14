@@ -1,22 +1,27 @@
 security:
-    # Configuration du système de hachage des mots de passe.
+    # Configuration du hachage des mots de passe
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # Permet à Symfony de récupérer un utilisateur depuis la base de données.
+    # Définition du fournisseur d'utilisateurs
     providers:
         app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
 
+    # Hiérarchie des rôles
+    role_hierarchy:
+        ROLE_EMPLOYEE: ROLE_USER
+        ROLE_ADMIN: ROLE_EMPLOYEE
+
     firewalls:
-        # Les outils de développement et les fichiers statiques ne sont pas protégés.
+        # Désactive la sécurité pour les outils de développement Symfony
         dev:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
 
-        # Firewall utilisé pour vérifier les identifiants et générer le JWT.
+        # Authentification via l'endpoint de connexion JWT
         login:
             pattern: ^/api/login_check
             stateless: true
@@ -27,30 +32,49 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-                remember_me: false
 
-        # Firewall utilisé pour authentifier les requêtes API avec un JWT.
+        # Protège les routes de l'API avec un JWT
         api:
             pattern: ^/api
             stateless: true
             provider: app_user_provider
             jwt: ~
 
-        # Firewall principal de l'application.
+        # Firewall principal de l'application
         main:
             lazy: true
             provider: app_user_provider
 
-    # Définit les accès aux différentes parties de l'application.
     access_control:
-        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+        # Routes accessibles sans authentification
         - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+
+        # Documentation Swagger
         - { path: ^/api/doc$, roles: PUBLIC_ACCESS }
         - { path: ^/api/doc\.json$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/foods$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/menus$, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: ROLE_USER }
-        - { path: ^/api/pictures$, roles: PUBLIC_ACCESS }
 
-        # Les autres routes de l'API nécessitent une authentification.
+        # Informations publiques du restaurant
+        - { path: ^/api/restaurant$, roles: PUBLIC_ACCESS }
+
+        # Consultation publique des plats
+        - { path: ^/api/foods$, roles: PUBLIC_ACCESS }
+
+        # Consultation publique des menus
+        - { path: ^/api/menus$, roles: PUBLIC_ACCESS }
+        
+        # Consultation des infos du restaurant
+        - { path: ^/api/restaurant$, roles: PUBLIC_ACCESS }
+
+        # Toutes les autres routes de l'API nécessitent un utilisateur authentifié
         - { path: ^/api, roles: ROLE_USER }
+
+when@test:
+    security:
+        password_hashers:
+            # Réduction du coût de hachage afin d'accélérer les tests
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10

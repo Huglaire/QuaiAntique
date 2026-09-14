@@ -1,0 +1,181 @@
+<section class="page-hero">
+    <h1>Informations du restaurant</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Paramètres du restaurant
+        </h2>
+
+        <p>
+            Modifiez les horaires d'ouverture, de fermeture et la capacité d'accueil.
+        </p>
+    </div>
+
+    <div
+        id="restaurant-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h3 class="h5 mb-4">
+                        Service du midi
+                    </h3>
+
+                    <form id="lunch-form">
+
+                        <div class="mb-3">
+                            <label
+                                for="lunch-opening-time"
+                                class="form-label"
+                            >
+                                Heure d'ouverture
+                            </label>
+
+                            <input
+                                type="time"
+                                id="lunch-opening-time"
+                                class="form-control"
+                                step="900"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                for="lunch-closing-time"
+                                class="form-label"
+                            >
+                                Heure de fermeture
+                            </label>
+
+                            <input
+                                type="time"
+                                id="lunch-closing-time"
+                                class="form-control"
+                                step="900"
+                                required
+                            >
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Enregistrer
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h3 class="h5 mb-4">
+                        Service du soir
+                    </h3>
+
+                    <form id="dinner-form">
+
+                        <div class="mb-3">
+                            <label
+                                for="dinner-opening-time"
+                                class="form-label"
+                            >
+                                Heure d'ouverture
+                            </label>
+
+                            <input
+                                type="time"
+                                id="dinner-opening-time"
+                                class="form-control"
+                                step="900"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                for="dinner-closing-time"
+                                class="form-label"
+                            >
+                                Heure de fermeture
+                            </label>
+
+                            <input
+                                type="time"
+                                id="dinner-closing-time"
+                                class="form-control"
+                                step="900"
+                                required
+                            >
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Enregistrer
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h3 class="h5 mb-4">
+                        Capacité d'accueil
+                    </h3>
+
+                    <form id="capacity-form">
+
+                        <div class="mb-3">
+                            <label
+                                for="max-guests"
+                                class="form-label"
+                            >
+                                Nombre maximum de convives
+                            </label>
+
+                            <input
+                                type="number"
+                                id="max-guests"
+                                class="form-control"
+                                min="1"
+                                required
+                            >
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Enregistrer
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>

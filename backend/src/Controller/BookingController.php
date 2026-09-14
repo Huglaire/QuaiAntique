@@ -340,7 +340,10 @@ final class BookingController
 
         // Récupère les horaires des deux services.
         $lunchOpeningTime = $restaurant->getLunchOpeningTime();
+        $lunchClosingTime = $restaurant->getLunchClosingTime();
+
         $dinnerOpeningTime = $restaurant->getDinnerOpeningTime();
+        $dinnerClosingTime = $restaurant->getDinnerClosingTime();
 
         // Prépare la réponse.
         $response = [
@@ -352,11 +355,10 @@ final class BookingController
         /*
          * Vérification de la disponibilité du service du midi.
          */
-        if ($lunchOpeningTime !== null) {
-            // Chaque service dure deux heures.
-            $lunchClosingTime = (clone $lunchOpeningTime)
-                ->modify('+2 hours');
-
+        if (
+            $lunchOpeningTime !== null
+            && $lunchClosingTime !== null
+        ) {
             // Vérifie la capacité restante du service.
             $serviceAvailable = $this->checkServiceCapacity(
                 $bookingRepository,
@@ -385,11 +387,10 @@ final class BookingController
         /*
          * Vérification de la disponibilité du service du soir.
          */
-        if ($dinnerOpeningTime !== null) {
-            // Chaque service dure deux heures.
-            $dinnerClosingTime = (clone $dinnerOpeningTime)
-                ->modify('+2 hours');
-
+        if (
+            $dinnerOpeningTime !== null
+            && $dinnerClosingTime !== null
+        ) {
             // Vérifie la capacité restante du service.
             $serviceAvailable = $this->checkServiceCapacity(
                 $bookingRepository,
@@ -789,27 +790,23 @@ final class BookingController
         Restaurant $restaurant,
         \DateTimeInterface $bookingTime
     ): ?array {
-        // Récupère l'heure d'ouverture du service du midi.
+        // Récupère les horaires du service du midi.
         $lunchOpeningTime = $restaurant->getLunchOpeningTime();
+        $lunchClosingTime = $restaurant->getLunchClosingTime();
 
-        // Récupère l'heure d'ouverture du service du soir.
+        // Récupère les horaires du service du soir.
         $dinnerOpeningTime = $restaurant->getDinnerOpeningTime();
+        $dinnerClosingTime = $restaurant->getDinnerClosingTime();
 
-        // Vérifie que les deux horaires sont bien configurés.
+        // Vérifie que les horaires sont bien configurés.
         if (
             $lunchOpeningTime === null
+            || $lunchClosingTime === null
             || $dinnerOpeningTime === null
+            || $dinnerClosingTime === null
         ) {
             return null;
         }
-
-        // Crée l'heure de fermeture du service du midi.
-        $lunchClosingTime = (clone $lunchOpeningTime)
-            ->modify('+2 hours');
-
-        // Crée l'heure de fermeture du service du soir.
-        $dinnerClosingTime = (clone $dinnerOpeningTime)
-            ->modify('+2 hours');
 
         // Convertit les heures en chaînes pour faciliter la comparaison.
         $requestedTime = $bookingTime->format('H:i');
