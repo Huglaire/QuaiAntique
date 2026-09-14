@@ -71,15 +71,51 @@ class FoodFixtures extends Fixture implements DependentFixtureInterface
                 'category' => $entrees,
             ],
             [
+                'title' => 'Salade de chèvre chaud',
+                'description' => 'Salade verte, chèvre chaud et noix.',
+                'price' => '11.00',
+                'category' => $entrees,
+            ],
+            [
+                'title' => 'Velouté de champignons',
+                'description' => 'Velouté de champignons et crème fraîche.',
+                'price' => '9.00',
+                'category' => $entrees,
+            ],
+            [
                 'title' => 'Filet de bœuf',
                 'description' => 'Filet de bœuf accompagné de légumes de saison et jus corsé.',
                 'price' => '28.00',
                 'category' => $plats,
             ],
             [
+                'title' => 'Poulet rôti',
+                'description' => 'Suprême de poulet rôti, pommes de terre et jus de volaille.',
+                'price' => '22.00',
+                'category' => $plats,
+            ],
+            [
+                'title' => 'Pavé de saumon',
+                'description' => 'Pavé de saumon accompagné de riz et légumes de saison.',
+                'price' => '24.00',
+                'category' => $plats,
+            ],
+            [
                 'title' => 'Fondant au chocolat',
                 'description' => 'Fondant au chocolat noir accompagné d’une glace vanille.',
                 'price' => '10.00',
+                'category' => $desserts,
+            ],
+            [
+                'title' => 'Tarte aux pommes',
+                'description' => 'Tarte fine aux pommes et caramel.',
+                'price' => '9.00',
+                'category' => $desserts,
+            ],
+            [
+                'title' => 'Crème brûlée',
+                'description' => 'Crème brûlée à la vanille.',
+                'price' => '8.00',
                 'category' => $desserts,
             ],
         ];

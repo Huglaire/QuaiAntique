@@ -39,7 +39,7 @@ class MenuFixtures extends Fixture implements DependentFixtureInterface
             );
         }
 
-        // Récupère les plats.
+        // Récupère les plats du menu du Quai.
         $tataki = $this->foodRepository->findOneBy([
             'title' => 'Tataki de saumon',
         ]);
@@ -52,10 +52,26 @@ class MenuFixtures extends Fixture implements DependentFixtureInterface
             'title' => 'Fondant au chocolat',
         ]);
 
+        // Récupère les plats du menu Gourmand.
+        $saladeChevre = $this->foodRepository->findOneBy([
+            'title' => 'Salade de chèvre chaud',
+        ]);
+
+        $paveSaumon = $this->foodRepository->findOneBy([
+            'title' => 'Pavé de saumon',
+        ]);
+
+        $tartePommes = $this->foodRepository->findOneBy([
+            'title' => 'Tarte aux pommes',
+        ]);
+
         if (
             $tataki === null
             || $filet === null
             || $fondant === null
+            || $saladeChevre === null
+            || $paveSaumon === null
+            || $tartePommes === null
         ) {
             throw new \RuntimeException(
                 'Un ou plusieurs plats sont introuvables.'
@@ -96,9 +112,8 @@ class MenuFixtures extends Fixture implements DependentFixtureInterface
         /*
          * Menu Gourmand
          *
-         * Une autre formule permettant notamment
-         * de tester qu'un même plat peut appartenir
-         * à plusieurs menus.
+         * Une formule différente avec une autre sélection
+         * de plats du restaurant.
          */
         $menuGourmand = new Menu();
 
@@ -112,13 +127,13 @@ class MenuFixtures extends Fixture implements DependentFixtureInterface
             'Une formule généreuse avec une sélection de plats du restaurant.'
         );
 
-        $menuGourmand->setPrice('50.00');
+        $menuGourmand->setPrice('42.00');
 
         $menuGourmand->setRestaurant($restaurant);
 
-        $menuGourmand->addFood($tataki);
-        $menuGourmand->addFood($filet);
-        $menuGourmand->addFood($fondant);
+        $menuGourmand->addFood($saladeChevre);
+        $menuGourmand->addFood($paveSaumon);
+        $menuGourmand->addFood($tartePommes);
 
         $menuGourmand->setCreatedAt(
             new \DateTimeImmutable()
