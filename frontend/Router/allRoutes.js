@@ -98,7 +98,15 @@ const allRoutes = [
         '/pages/admin/gallery.html',
         '/js/admin/gallery.js',
         ['ROLE_ADMIN']
-)
+    ),
+
+    new Route(
+        '/admin/categories',
+        'Gestion des catégories',
+        '/pages/admin/categories.html',
+        '/js/admin/categories.js',
+        ['ROLE_ADMIN']
+    )
 ];
 
 export default allRoutes;
