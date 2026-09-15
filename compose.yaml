@@ -24,8 +24,9 @@ services:
       - vendor_data:/var/www/html/vendor
     depends_on:
       - database
+      - mongodb
 
-  # Base de données
+  # Base de données MySQL
   database:
     image: mysql:8.0
     container_name: quaiantique_database
@@ -40,6 +41,17 @@ services:
     ports:
       - "3307:3306"
 
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:8
+    container_name: quaiantique_mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
 volumes:
   database_data:
+  mongodb_data:
   vendor_data:
