@@ -106,6 +106,14 @@ const allRoutes = [
         '/pages/admin/categories.html',
         '/js/admin/categories.js',
         ['ROLE_ADMIN']
+    ),
+
+    new Route(
+        '/admin/plats',
+        'Gestion des plats',
+        '/pages/admin/foods.html',
+        '/js/admin/foods.js',
+        ['ROLE_ADMIN']
     )
 ];
 
