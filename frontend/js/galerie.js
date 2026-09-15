@@ -42,8 +42,12 @@ export async function init() {
         galleryContainer.replaceChildren();
         galleryMessage.replaceChildren();
 
-        if (!Array.isArray(pictures) || pictures.length === 0) {
-            const message = document.createElement('p');
+        if (
+            !Array.isArray(pictures)
+            || pictures.length === 0
+        ) {
+            const message =
+                document.createElement('p');
 
             message.classList.add(
                 'text-muted'
@@ -61,10 +65,9 @@ export async function init() {
             document.createDocumentFragment();
 
         for (const picture of pictures) {
-            const column =
-                createPictureCard(picture);
-
-            fragment.append(column);
+            fragment.append(
+                createPictureCard(picture)
+            );
         }
 
         galleryContainer.append(fragment);
@@ -75,7 +78,8 @@ export async function init() {
         galleryContainer.replaceChildren();
         galleryMessage.replaceChildren();
 
-        const message = document.createElement('p');
+        const message =
+            document.createElement('p');
 
         message.classList.add(
             'text-danger'
@@ -91,11 +95,15 @@ export async function init() {
 /**
  * Crée une carte représentant une photo.
  *
+ * Le titre est placé dans une superposition
+ * qui apparaît au survol de l'image.
+ *
  * @param {Object} picture
  * @returns {HTMLElement}
  */
 function createPictureCard(picture) {
-    const column = document.createElement('div');
+    const column =
+        document.createElement('div');
 
     column.classList.add(
         'col-12',
@@ -103,54 +111,64 @@ function createPictureCard(picture) {
         'col-lg-4'
     );
 
-    const card = document.createElement('article');
+    const card =
+        document.createElement('article');
 
     card.classList.add(
-        'card',
-        'h-100',
-        'shadow-sm',
-        'overflow-hidden'
+        'gallery-card'
     );
 
-    const image = document.createElement('img');
+    const imageContainer =
+        document.createElement('div');
+
+    imageContainer.classList.add(
+        'gallery-image-container'
+    );
+
+    const image =
+        document.createElement('img');
 
     image.classList.add(
-        'card-img-top'
+        'gallery-image'
     );
 
     image.src =
         `${API_BASE_URL}${picture.imageUrl}`;
 
     image.alt =
-        picture.title || 'Photo du Quai Antique';
+        picture.title
+        || 'Photo du Quai Antique';
 
-    image.loading = 'lazy';
+    image.loading =
+        'lazy';
 
-    image.style.height = '280px';
-    image.style.objectFit = 'cover';
+    const overlay =
+        document.createElement('div');
 
-    const cardBody = document.createElement('div');
-
-    cardBody.classList.add(
-        'card-body'
+    overlay.classList.add(
+        'gallery-overlay'
     );
 
-    const title = document.createElement('h2');
+    const title =
+        document.createElement('h2');
 
     title.classList.add(
-        'card-title',
-        'h5',
-        'mb-0'
+        'gallery-title'
     );
 
     title.textContent =
-        picture.title || 'Quai Antique';
+        picture.title
+        || 'Quai Antique';
 
-    cardBody.append(title);
+    overlay.append(title);
+
+    imageContainer.append(
+        image,
+        overlay
+    );
 
     card.append(
-        image,
-        cardBody
+        imageContainer
     );
 
     column.append(card);

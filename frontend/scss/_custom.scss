@@ -27,3 +27,73 @@ $body-color: $black;
 $headings-color: $dark;
 
 $btn-border-radius: 0.25rem;
+
+/**
+ * Galerie publique
+ */
+
+.gallery-card {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.gallery-image-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+}
+
+.gallery-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 1.5rem;
+
+    background-color: rgba(0, 0, 0, 0.55);
+
+    opacity: 0;
+
+    transition: opacity 0.3s ease;
+}
+
+.gallery-title {
+    margin: 0;
+
+    color: #ffffff;
+    text-align: center;
+
+    opacity: 0;
+
+    transform: translateY(10px);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.gallery-image-container:hover .gallery-overlay {
+    opacity: 1;
+}
+
+.gallery-image-container:hover .gallery-title {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.gallery-image-container:hover .gallery-image {
+    transform: scale(1.03);
+}

@@ -90,7 +90,15 @@ const allRoutes = [
         '/pages/admin/restaurant.html',
         '/js/admin/restaurant.js',
         ['ROLE_ADMIN']
-    )
+    ),
+
+    new Route(
+        '/admin/gallery',
+        'Gestion de la galerie',
+        '/pages/admin/gallery.html',
+        '/js/admin/gallery.js',
+        ['ROLE_ADMIN']
+)
 ];
 
 export default allRoutes;

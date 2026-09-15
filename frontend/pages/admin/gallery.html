@@ -1,0 +1,98 @@
+<section class="container py-5">
+
+    <div class="mb-5">
+        <h1>Gestion de la galerie</h1>
+        <p>
+            Ajoutez, modifiez ou supprimez les photos de la galerie du restaurant.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-body">
+
+            <h2 class="h4 mb-4">
+                Ajouter une photo
+            </h2>
+
+            <form id="gallery-add-form">
+
+                <div class="mb-3">
+                    <label
+                        for="gallery-title"
+                        class="form-label"
+                    >
+                        Titre
+                    </label>
+
+                    <input
+                        type="text"
+                        id="gallery-title"
+                        name="title"
+                        class="form-control"
+                        maxlength="150"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="gallery-image"
+                        class="form-label"
+                    >
+                        Image
+                    </label>
+
+                    <input
+                        type="file"
+                        id="gallery-image"
+                        name="image"
+                        class="form-control"
+                        accept="image/jpeg,image/png,image/webp"
+                        required
+                    >
+
+                    <div class="form-text">
+                        Formats acceptés : JPEG, PNG ou WebP. Taille maximale : 5 Mo.
+                    </div>
+                </div>
+
+                <div
+                    id="gallery-add-message"
+                    class="mb-3"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Ajouter la photo
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+    <div>
+
+        <h2 class="h4 mb-4">
+            Photos actuelles
+        </h2>
+
+        <div
+            id="gallery-admin-message"
+            class="mb-3"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+        <div
+            id="gallery-admin-container"
+            class="row g-4"
+        ></div>
+
+    </div>
+
+</section>
