@@ -114,6 +114,14 @@ const allRoutes = [
         '/pages/admin/foods.html',
         '/js/admin/foods.js',
         ['ROLE_ADMIN']
+    ),
+
+    new Route(
+        '/admin/menus',
+        'Gestion des menus',
+        '/pages/admin/menus.html',
+        '/js/admin/menus.js',
+        ['ROLE_ADMIN']
     )
 ];
 
