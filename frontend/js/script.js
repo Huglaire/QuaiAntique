@@ -1,7 +1,7 @@
 const API_URL = 'http://127.0.0.1:8000/api';
 
 /**
- * Récupère le token JWT enregistré.
+ * Retourne le token JWT enregistré.
  *
  * @returns {string|null}
  */
@@ -10,7 +10,7 @@ export function getToken() {
 }
 
 /**
- * Vérifie si un utilisateur possède un token JWT.
+ * Vérifie si un utilisateur est authentifié.
  *
  * @returns {boolean}
  */
@@ -61,7 +61,7 @@ export function logout() {
 }
 
 /**
- * Vérifie si l'utilisateur connecté possède le rôle administrateur.
+ * Vérifie si l'utilisateur possède le rôle administrateur.
  *
  * @param {Object|null} user
  * @returns {boolean}
@@ -71,7 +71,7 @@ export function isAdmin(user) {
 }
 
 /**
- * Récupère les informations publiques du restaurant.
+ * Récupère les informations du restaurant.
  *
  * @returns {Promise<Object|null>}
  */
@@ -102,9 +102,6 @@ export async function getRestaurantInformation() {
 
 /**
  * Met à jour les horaires affichés dans le footer.
- *
- * Les horaires sont récupérés depuis l'API afin de rester
- * synchronisés avec les modifications effectuées par l'administrateur.
  *
  * @returns {Promise<void>}
  */
@@ -166,28 +163,22 @@ export async function updateFooterSchedule() {
     const dinnerClosing =
         restaurant.dinnerClosingTime;
 
-    if (
-        lunchOpening &&
-        lunchClosing
-    ) {
+    if (lunchOpening && lunchClosing) {
         paragraphs[1].textContent =
             `${lunchOpening} - ${lunchClosing}`;
     }
 
-    if (
-        dinnerOpening &&
-        dinnerClosing
-    ) {
+    if (dinnerOpening && dinnerClosing) {
         paragraphs[2].textContent =
             `${dinnerOpening} - ${dinnerClosing}`;
     }
 }
 
 /**
- * Met à jour le lien de connexion dans la navigation.
+ * Met à jour la navigation en fonction
+ * de l'utilisateur connecté.
  *
- * Le lien existant dans index.html est conservé.
- * Il est simplement adapté selon l'état de connexion.
+ * @returns {Promise<void>}
  */
 export async function updateNavigation() {
     const loginLink = document.querySelector(
@@ -207,7 +198,6 @@ export async function updateNavigation() {
             'data-auth-action',
             'logout'
         );
-
     } else {
         loginLink.textContent = 'Connexion';
 
@@ -216,7 +206,72 @@ export async function updateNavigation() {
         );
     }
 
+    updateAdministrationLink(user);
+
     await updateFooterSchedule();
+}
+
+/**
+ * Ajoute ou supprime le lien d'administration
+ * dans la navigation selon le rôle de l'utilisateur.
+ *
+ * @param {Object|null} user
+ */
+function updateAdministrationLink(user) {
+    const navbar =
+        document.querySelector('#navbarNav .navbar-nav');
+
+    if (!navbar) {
+        return;
+    }
+
+    const existingLink =
+        navbar.querySelector(
+            'a[href="/admin"]'
+        );
+
+    if (isAdmin(user)) {
+        if (existingLink) {
+            return;
+        }
+
+        const listItem =
+            document.createElement('li');
+
+        listItem.classList.add(
+            'nav-item'
+        );
+
+        const administrationLink =
+            document.createElement('a');
+
+        administrationLink.classList.add(
+            'nav-link'
+        );
+
+        administrationLink.href =
+            '/admin';
+
+        administrationLink.textContent =
+            'Administration';
+
+        listItem.append(
+            administrationLink
+        );
+
+        navbar.append(listItem);
+
+        return;
+    }
+
+    if (existingLink) {
+        const listItem =
+            existingLink.closest('li');
+
+        if (listItem) {
+            listItem.remove();
+        }
+    }
 }
 
 /**
