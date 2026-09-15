@@ -122,6 +122,14 @@ const allRoutes = [
         '/pages/admin/menus.html',
         '/js/admin/menus.js',
         ['ROLE_ADMIN']
+    ),
+
+    new Route(
+        '/admin/statistics',
+        'Statistiques',
+        '/pages/admin/statistics.html',
+        '/js/admin/statistics.js',
+        ['ROLE_ADMIN']
     )
 ];
 
