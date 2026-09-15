@@ -73,7 +73,7 @@ class StatisticsService
         }
 
         $statistics->setGeneratedAt(
-            new \DateTimeImmutable()
+            new \DateTime()
         );
 
         $statistics->setAverageGuestsPerBooking(

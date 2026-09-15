@@ -11,7 +11,7 @@ class Statistics
     private ?string $id = null;
 
     #[ODM\Field(type: 'date')]
-    private ?\DateTimeImmutable $generatedAt = null;
+    private ?\DateTime $generatedAt = null;
 
     #[ODM\Field(type: 'float')]
     private ?float $averageGuestsPerBooking = null;
@@ -27,13 +27,13 @@ class Statistics
         return $this->id;
     }
 
-    public function getGeneratedAt(): ?\DateTimeImmutable
+    public function getGeneratedAt(): ?\DateTime
     {
         return $this->generatedAt;
     }
 
     public function setGeneratedAt(
-        \DateTimeImmutable $generatedAt
+        \DateTime $generatedAt
     ): static {
         $this->generatedAt = $generatedAt;
 
