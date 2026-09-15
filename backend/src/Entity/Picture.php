@@ -19,6 +19,9 @@ class Picture
     #[ORM\Column(length: 180, unique: true)]
     private ?string $slug = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $imageName = null;
+
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -54,6 +57,18 @@ class Picture
     public function setSlug(string $slug): static
     {
         $this->slug = $slug;
+
+        return $this;
+    }
+
+    public function getImageName(): ?string
+    {
+        return $this->imageName;
+    }
+
+    public function setImageName(string $imageName): static
+    {
+        $this->imageName = $imageName;
 
         return $this;
     }

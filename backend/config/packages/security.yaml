@@ -3,7 +3,7 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # Définition du fournisseur d'utilisateurs
+    # Définition du fournisseur d'utilisateurs (lecture depuis la base de données)
     providers:
         app_user_provider:
             entity:
@@ -11,6 +11,8 @@ security:
                 property: email
 
     # Hiérarchie des rôles
+    # Un administrateur hérite des droits d'un employé,
+    # qui hérite lui-même des droits d'un utilisateur.
     role_hierarchy:
         ROLE_EMPLOYEE: ROLE_USER
         ROLE_ADMIN: ROLE_EMPLOYEE
@@ -33,11 +35,10 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-        # Protège les routes de l'API avec un JWT
+        # Protège toutes les routes de l'API avec un JWT
         api:
             pattern: ^/api
             stateless: true
-            provider: app_user_provider
             jwt: ~
 
         # Firewall principal de l'application
@@ -47,27 +48,30 @@ security:
 
     access_control:
         # Routes accessibles sans authentification
-        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/account/restore$, roles: PUBLIC_ACCESS }
 
         # Documentation Swagger
         - { path: ^/api/doc$, roles: PUBLIC_ACCESS }
         - { path: ^/api/doc\.json$, roles: PUBLIC_ACCESS }
 
-        # Informations publiques du restaurant
-        - { path: ^/api/restaurant$, roles: PUBLIC_ACCESS }
-
-        # Consultation publique des plats
-        - { path: ^/api/foods$, roles: PUBLIC_ACCESS }
-
         # Consultation publique des menus
-        - { path: ^/api/menus$, roles: PUBLIC_ACCESS }
-        
-        # Consultation des infos du restaurant
-        - { path: ^/api/restaurant$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/menus$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/menus/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+
+        # Consultation publique des avis validés
+        - { path: ^/api/reviews$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/reviews/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+
+        # Consultation publique de la galerie
+        - { path: ^/api/pictures$, roles: PUBLIC_ACCESS, methods: [GET] }
+
+        # Consultation publique des informations du restaurant
+        - { path: ^/api/restaurant$, roles: PUBLIC_ACCESS, methods: [GET] }
 
         # Toutes les autres routes de l'API nécessitent un utilisateur authentifié
-        - { path: ^/api, roles: ROLE_USER }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

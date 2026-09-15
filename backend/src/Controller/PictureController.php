@@ -48,6 +48,16 @@ class PictureController
                                 example: 'la-salle-du-restaurant'
                             ),
                             new OA\Property(
+                                property: 'imageName',
+                                type: 'string',
+                                example: 'a8f2c1e4b6d7.jpg'
+                            ),
+                            new OA\Property(
+                                property: 'imageUrl',
+                                type: 'string',
+                                example: '/uploads/gallery/a8f2c1e4b6d7.jpg'
+                            ),
+                            new OA\Property(
                                 property: 'createdAt',
                                 type: 'string',
                                 nullable: true,
@@ -81,6 +91,8 @@ class PictureController
                 'id' => $picture->getId(),
                 'title' => $picture->getTitle(),
                 'slug' => $picture->getSlug(),
+                'imageName' => $picture->getImageName(),
+                'imageUrl' => '/uploads/gallery/' . $picture->getImageName(),
                 'createdAt' => $picture
                     ->getCreatedAt()
                     ?->format('Y-m-d H:i:s'),
