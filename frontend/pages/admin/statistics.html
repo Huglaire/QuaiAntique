@@ -1,0 +1,98 @@
+<section class="page-hero">
+    <h1>Statistiques</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Statistiques du restaurant
+        </h2>
+
+        <p>
+            Consultez les données de fréquentation et d'occupation
+            de Quai Antique.
+        </p>
+    </div>
+
+    <div
+        id="statistics-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-md-4">
+            <article class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+
+                    <h3 class="h5 text-primary mb-3">
+                        Nombre moyen de convives
+                    </h3>
+
+                    <p
+                        id="average-guests"
+                        class="display-6 mb-2"
+                    >
+                        -
+                    </p>
+
+                    <p class="mb-0 text-muted">
+                        convives par réservation
+                    </p>
+
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <article class="card h-100 shadow-sm">
+                <div class="card-body">
+
+                    <h3 class="h5 text-primary mb-3">
+                        Taux d'occupation moyen
+                    </h3>
+
+                    <div id="occupancy-by-day"></div>
+
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <article class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+
+                    <h3 class="h5 text-primary mb-3">
+                        Créneau le plus fréquenté
+                    </h3>
+
+                    <p
+                        id="busiest-time"
+                        class="display-6 mb-2"
+                    >
+                        -
+                    </p>
+
+                    <p
+                        id="busiest-time-guests"
+                        class="mb-0 text-muted"
+                    >
+                        -
+                    </p>
+
+                </div>
+            </article>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-5">
+        <p
+            id="statistics-generated-at"
+            class="text-muted mb-0"
+        ></p>
+    </div>
+
+</section>

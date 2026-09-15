@@ -206,9 +206,73 @@ export async function updateNavigation() {
         );
     }
 
+    updateAccountLink(user);
     updateAdministrationLink(user);
 
     await updateFooterSchedule();
+}
+
+/**
+ * Ajoute ou supprime le lien vers le compte
+ * dans la navigation selon l'état de connexion.
+ *
+ * @param {Object|null} user
+ */
+function updateAccountLink(user) {
+    const navbar =
+        document.querySelector('#navbarNav .navbar-nav');
+
+    if (!navbar) {
+        return;
+    }
+
+    const existingLink =
+        navbar.querySelector(
+            'a[href="/compte"]'
+        );
+
+    if (user) {
+        if (existingLink) {
+            return;
+        }
+
+        const listItem =
+            document.createElement('li');
+
+        listItem.classList.add(
+            'nav-item'
+        );
+
+        const accountLink =
+            document.createElement('a');
+
+        accountLink.classList.add(
+            'nav-link'
+        );
+
+        accountLink.href =
+            '/compte';
+
+        accountLink.textContent =
+            'Mon compte';
+
+        listItem.append(
+            accountLink
+        );
+
+        navbar.append(listItem);
+
+        return;
+    }
+
+    if (existingLink) {
+        const listItem =
+            existingLink.closest('li');
+
+        if (listItem) {
+            listItem.remove();
+        }
+    }
 }
 
 /**
