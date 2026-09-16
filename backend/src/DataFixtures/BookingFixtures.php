@@ -32,7 +32,7 @@ class BookingFixtures extends Fixture implements DependentFixtureInterface
 
     public function load(ObjectManager $manager): void
     {
-        // Récupère le restaurant de test.
+        // Récupère le restaurant Quai Antique.
         $restaurant = $this->restaurantRepository->findOneBy([
             'name' => 'Quai Antique',
         ]);
@@ -43,54 +43,108 @@ class BookingFixtures extends Fixture implements DependentFixtureInterface
             );
         }
 
-        // Récupère l'utilisateur de test.
-        $user = $this->userRepository->findOneBy([
-            'email' => 'user@mail.fr',
-        ]);
-
-        if ($user === null) {
-            throw new \RuntimeException(
-                'L\'utilisateur user@mail.fr est introuvable.'
-            );
-        }
-
-        // Récupère l'administrateur de test.
-        $admin = $this->userRepository->findOneBy([
-            'email' => 'admin@mail.fr',
-        ]);
-
-        if ($admin === null) {
-            throw new \RuntimeException(
-                'L\'administrateur admin@mail.fr est introuvable.'
-            );
-        }
-
-        // Crée les trois réservations de test.
-        $bookings = [
-            [
-                'user' => $user,
-                'guestNumber' => 2,
-                'date' => '2026-09-08',
-                'time' => '12:00',
-                'allergy' => null,
-            ],
-            [
-                'user' => $user,
-                'guestNumber' => 3,
-                'date' => '2026-09-09',
-                'time' => '20:00',
-                'allergy' => null,
-            ],
-            [
-                'user' => $admin,
-                'guestNumber' => 4,
-                'date' => '2026-09-10',
-                'time' => '19:30',
-                'allergy' => 'Allergie aux crustacés',
-            ],
+        // Liste des adresses e-mail des dix clients de test.
+        $clientEmails = [
+            'user@mail.fr',
+            'client2@mail.fr',
+            'client3@mail.fr',
+            'client4@mail.fr',
+            'client5@mail.fr',
+            'client6@mail.fr',
+            'client7@mail.fr',
+            'client8@mail.fr',
+            'client9@mail.fr',
+            'client10@mail.fr',
         ];
 
-        foreach ($bookings as $bookingData) {
+        // Récupère les utilisateurs correspondant aux clients de test.
+        $users = [];
+
+        foreach ($clientEmails as $email) {
+            $user = $this->userRepository->findOneBy([
+                'email' => $email,
+            ]);
+
+            if ($user === null) {
+                throw new \RuntimeException(
+                    "L'utilisateur {$email} est introuvable."
+                );
+            }
+
+            $users[$email] = $user;
+        }
+
+        /*
+         * Jeu de données volontairement contrôlé.
+         *
+         * Il contient 40 réservations :
+         * 10 clients × 4 réservations.
+         *
+         * Les horaires et le nombre de convives sont définis
+         * manuellement afin de pouvoir vérifier les statistiques.
+         */
+        $bookings = [
+            // Mardi 08/09/2026.
+            ['2026-09-08', '12:00', 2],
+            ['2026-09-08', '12:00', 3],
+            ['2026-09-08', '12:30', 4],
+            ['2026-09-08', '12:30', 5],
+            ['2026-09-08', '19:00', 3],
+            ['2026-09-08', '19:00', 4],
+            ['2026-09-08', '20:00', 6],
+            ['2026-09-08', '20:00', 8],
+
+            // Mercredi 09/09/2026.
+            ['2026-09-09', '12:00', 3],
+            ['2026-09-09', '12:00', 4],
+            ['2026-09-09', '12:30', 4],
+            ['2026-09-09', '12:30', 5],
+            ['2026-09-09', '19:00', 4],
+            ['2026-09-09', '19:00', 5],
+            ['2026-09-09', '20:00', 7],
+            ['2026-09-09', '20:00', 8],
+
+            // Jeudi 10/09/2026.
+            ['2026-09-10', '12:00', 2],
+            ['2026-09-10', '12:00', 5],
+            ['2026-09-10', '12:30', 5],
+            ['2026-09-10', '12:30', 6],
+            ['2026-09-10', '19:00', 4],
+            ['2026-09-10', '19:00', 5],
+            ['2026-09-10', '20:00', 8],
+            ['2026-09-10', '20:00', 9],
+
+            // Vendredi 11/09/2026.
+            ['2026-09-11', '12:00', 4],
+            ['2026-09-11', '12:00', 5],
+            ['2026-09-11', '12:30', 6],
+            ['2026-09-11', '12:30', 7],
+            ['2026-09-11', '19:00', 6],
+            ['2026-09-11', '19:00', 7],
+            ['2026-09-11', '20:00', 9],
+            ['2026-09-11', '20:00', 10],
+
+            // Samedi 12/09/2026.
+            ['2026-09-12', '12:00', 3],
+            ['2026-09-12', '12:00', 4],
+            ['2026-09-12', '12:30', 5],
+            ['2026-09-12', '12:30', 6],
+            ['2026-09-12', '19:00', 7],
+            ['2026-09-12', '19:00', 8],
+            ['2026-09-12', '20:00', 10],
+            ['2026-09-12', '20:00', 10],
+        ];
+
+        /*
+         * Attribution des réservations aux clients.
+         *
+         * La répartition cyclique garantit que chaque client
+         * reçoit exactement quatre réservations.
+         */
+        foreach ($bookings as $index => $bookingData) {
+            $clientEmail =
+                $clientEmails[$index % count($clientEmails)];
+
             $booking = new Booking();
 
             // Génère automatiquement un UUID unique.
@@ -98,30 +152,33 @@ class BookingFixtures extends Fixture implements DependentFixtureInterface
                 Uuid::v4()->toRfc4122()
             );
 
-            // Informations de la réservation.
+            // Définit le nombre de convives.
             $booking->setGuestNumber(
-                $bookingData['guestNumber']
+                $bookingData[2]
             );
 
+            // Définit la date de réservation.
             $booking->setBookingDate(
-                new \DateTime($bookingData['date'])
+                new \DateTime($bookingData[0])
             );
 
+            // Définit l'heure de réservation.
             $booking->setBookingTime(
-                new \DateTime($bookingData['time'])
+                new \DateTime($bookingData[1])
             );
 
-            $booking->setAllergy(
-                $bookingData['allergy']
-            );
+            // Aucune allergie par défaut.
+            $booking->setAllergy(null);
 
-            // Associe la réservation à son utilisateur.
+            // Associe la réservation à son client.
             $booking->setUser(
-                $bookingData['user']
+                $users[$clientEmail]
             );
 
             // Associe la réservation au restaurant.
-            $booking->setRestaurant($restaurant);
+            $booking->setRestaurant(
+                $restaurant
+            );
 
             // Enregistre la date de création.
             $booking->setCreatedAt(
@@ -132,7 +189,7 @@ class BookingFixtures extends Fixture implements DependentFixtureInterface
             $manager->persist($booking);
         }
 
-        // Enregistre les réservations en base.
+        // Enregistre toutes les réservations en base.
         $manager->flush();
     }
 }
