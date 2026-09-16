@@ -1,6 +1,6 @@
 services:
 
-  # Serveur web
+  # Serveur web du backend Symfony
   nginx:
     image: nginx:alpine
     container_name: quaiantique_nginx
@@ -19,12 +19,27 @@ services:
       dockerfile: Dockerfile
     container_name: quaiantique_php
     working_dir: /var/www/html
+    environment:
+      DATABASE_URL: "mysql://root:root@database:3306/quai_antique?serverVersion=8.0.46&charset=utf8mb4"
+      MONGODB_URI: "mongodb://mongodb:27017"
+      MONGODB_DB: "symfony"
     volumes:
       - ./backend:/var/www/html
       - vendor_data:/var/www/html/vendor
     depends_on:
       - database
       - mongodb
+
+  # Frontend Vite construit puis servi par Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quaiantique_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - nginx
 
   # Base de données MySQL
   database:

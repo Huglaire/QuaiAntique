@@ -12,6 +12,7 @@
 
 # Node.js
 /frontend/node_modules/
+/frontend/dist/
 
 # Fichiers npm
 /frontend/npm-debug.log*
