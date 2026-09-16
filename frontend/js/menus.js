@@ -357,39 +357,37 @@ function renderFoods(
     }
 
     /*
-     * Définit l'ordre d'affichage des catégories.
+     * Les catégories historiques du restaurant
+     * restent affichées en premier lorsqu'elles existent.
      */
-    const categoryOrder = [
+    const preferredCategoryOrder = [
         'Entrées',
         'Plats',
         'Desserts'
     ];
 
     /*
-     * Regroupe les plats par catégorie.
+     * Regroupe tous les plats par catégorie.
+     *
+     * Contrairement à l'ancienne version,
+     * aucune catégorie n'est ignorée.
      */
     const foodsByCategory = new Map();
-
-    categoryOrder.forEach(
-        (category) => {
-            foodsByCategory.set(
-                category,
-                []
-            );
-        }
-    );
 
     foods.forEach((food) => {
 
         const categoryTitle =
             food.category?.title;
 
-        if (
-            !foodsByCategory.has(
-                categoryTitle
-            )
-        ) {
+        if (!categoryTitle) {
             return;
+        }
+
+        if (!foodsByCategory.has(categoryTitle)) {
+            foodsByCategory.set(
+                categoryTitle,
+                []
+            );
         }
 
         foodsByCategory
@@ -397,10 +395,58 @@ function renderFoods(
             .push(food);
     });
 
+    /*
+     * Prépare l'ordre final des catégories.
+     *
+     * Les trois catégories historiques sont prioritaires,
+     * puis les nouvelles catégories sont ajoutées
+     * dans l'ordre alphabétique.
+     */
+    const categoryNames = [
+        ...foodsByCategory.keys()
+    ];
+
+    const orderedCategories = [];
+
+    preferredCategoryOrder.forEach(
+        (categoryTitle) => {
+
+            if (
+                foodsByCategory.has(
+                    categoryTitle
+                )
+            ) {
+                orderedCategories.push(
+                    categoryTitle
+                );
+            }
+        }
+    );
+
+    const additionalCategories =
+        categoryNames
+            .filter(
+                (categoryTitle) =>
+                    !preferredCategoryOrder.includes(
+                        categoryTitle
+                    )
+            )
+            .sort(
+                (categoryA, categoryB) =>
+                    categoryA.localeCompare(
+                        categoryB,
+                        'fr'
+                    )
+            );
+
+    orderedCategories.push(
+        ...additionalCategories
+    );
+
     const fragment =
         document.createDocumentFragment();
 
-    categoryOrder.forEach(
+    orderedCategories.forEach(
         (categoryTitle) => {
 
             const categoryFoods =
