@@ -12,6 +12,48 @@ import {
 const mainPage = document.getElementById('main-page');
 
 
+// Modules JavaScript des différentes pages.
+// Les imports sont déclarés explicitement afin que Vite
+// puisse les intégrer correctement lors du build de production.
+const pageModules = {
+    '/js/menus.js': () => import('../js/menus.js'),
+    '/js/galerie.js': () => import('../js/galerie.js'),
+
+    '/js/auth/signin.js': () => import('../js/auth/signin.js'),
+    '/js/auth/signup.js': () => import('../js/auth/signup.js'),
+    '/js/auth/account.js': () => import('../js/auth/account.js'),
+    '/js/auth/editPassword.js': () =>
+        import('../js/auth/editPassword.js'),
+
+    '/js/reservations/reserver.js': () =>
+        import('../js/reservations/reserver.js'),
+
+    '/js/reservations/allResa.js': () =>
+        import('../js/reservations/allResa.js'),
+
+    '/js/admin/bookings.js': () =>
+        import('../js/admin/bookings.js'),
+
+    '/js/admin/restaurant.js': () =>
+        import('../js/admin/restaurant.js'),
+
+    '/js/admin/gallery.js': () =>
+        import('../js/admin/gallery.js'),
+
+    '/js/admin/categories.js': () =>
+        import('../js/admin/categories.js'),
+
+    '/js/admin/foods.js': () =>
+        import('../js/admin/foods.js'),
+
+    '/js/admin/menus.js': () =>
+        import('../js/admin/menus.js'),
+
+    '/js/admin/statistics.js': () =>
+        import('../js/admin/statistics.js')
+};
+
+
 // Met à jour la navigation
 async function refreshNavigation() {
     await updateNavigation();
@@ -21,12 +63,18 @@ async function refreshNavigation() {
 // Affiche un message dans la zone principale
 function displayMessage(title, message) {
     const section = document.createElement('section');
-    section.classList.add('container', 'py-5');
+
+    section.classList.add(
+        'container',
+        'py-5'
+    );
 
     const heading = document.createElement('h1');
+
     heading.textContent = title;
 
     const paragraph = document.createElement('p');
+
     paragraph.textContent = message;
 
     section.append(
@@ -34,13 +82,18 @@ function displayMessage(title, message) {
         paragraph
     );
 
-    mainPage.replaceChildren(section);
+    mainPage.replaceChildren(
+        section
+    );
 }
 
 
 // Vérifie si l'utilisateur possède le rôle nécessaire
 async function checkRouteAccess(route) {
-    if (!route.roles || route.roles.length === 0) {
+    if (
+        !route.roles
+        || route.roles.length === 0
+    ) {
         return true;
     }
 
@@ -84,7 +137,9 @@ async function loadRoute(path) {
     }
 
     // Vérifie les droits d'accès à la route
-    const hasAccess = await checkRouteAccess(route);
+    const hasAccess = await checkRouteAccess(
+        route
+    );
 
     if (!hasAccess) {
 
@@ -94,7 +149,9 @@ async function loadRoute(path) {
             '/connexion'
         );
 
-        await loadRoute('/connexion');
+        await loadRoute(
+            '/connexion'
+        );
 
         return;
     }
@@ -102,7 +159,9 @@ async function loadRoute(path) {
     try {
 
         // Récupère le contenu HTML de la page
-        const response = await fetch(route.view);
+        const response = await fetch(
+            route.view
+        );
 
         if (!response.ok) {
             throw new Error(
@@ -115,10 +174,11 @@ async function loadRoute(path) {
         // Transforme le HTML reçu en document temporaire
         const parser = new DOMParser();
 
-        const documentPage = parser.parseFromString(
-            html,
-            'text/html'
-        );
+        const documentPage =
+            parser.parseFromString(
+                html,
+                'text/html'
+            );
 
         // Injecte les éléments de la page dans le SPA
         mainPage.replaceChildren(
@@ -134,9 +194,17 @@ async function loadRoute(path) {
         // Charge le script associé à la page
         if (route.script) {
 
-            const pageModule = await import(
-                route.script
-            );
+            const loadPageModule =
+                pageModules[route.script];
+
+            if (!loadPageModule) {
+                throw new Error(
+                    `Module introuvable pour ${route.script}`
+                );
+            }
+
+            const pageModule =
+                await loadPageModule();
 
             if (
                 typeof pageModule.init === 'function'
@@ -180,7 +248,8 @@ document.addEventListener(
     'click',
     (event) => {
 
-        const link = event.target.closest('a');
+        const link =
+            event.target.closest('a');
 
         if (!link) {
             return;
@@ -208,7 +277,9 @@ document.addEventListener(
 
         event.preventDefault();
 
-        navigate(url.pathname);
+        navigate(
+            url.pathname
+        );
     }
 );
 
