@@ -10,40 +10,60 @@ import {
 } from 'node:path';
 
 
-// Copie le dossier pages dans le build final
+// Copie un dossier dans le build final
 // en conservant sa structure.
-function copyPagesPlugin() {
+function copyDirectory(sourceDirectory, destinationDirectory) {
+
+    const source =
+        resolve(
+            process.cwd(),
+            sourceDirectory
+        );
+
+    const destination =
+        resolve(
+            process.cwd(),
+            'dist',
+            destinationDirectory
+        );
+
+    if (!existsSync(source)) {
+        throw new Error(
+            `Le dossier ${sourceDirectory} est introuvable.`
+        );
+    }
+
+    cpSync(
+        source,
+        destination,
+        {
+            recursive: true
+        }
+    );
+}
+
+
+// Copie les ressources qui doivent conserver
+// leur chemin actuel dans le frontend.
+function copyStaticResourcesPlugin() {
 
     return {
-        name: 'copy-pages',
+        name: 'copy-static-resources',
 
         closeBundle() {
 
-            const source =
-                resolve(
-                    process.cwd(),
-                    'pages'
-                );
+            // Conserve les pages HTML utilisées
+            // par le routeur de l'application SPA.
+            copyDirectory(
+                'pages',
+                'pages'
+            );
 
-            const destination =
-                resolve(
-                    process.cwd(),
-                    'dist',
-                    'pages'
-                );
-
-            if (!existsSync(source)) {
-                throw new Error(
-                    'Le dossier pages est introuvable.'
-                );
-            }
-
-            cpSync(
-                source,
-                destination,
-                {
-                    recursive: true
-                }
+            // Conserve les images utilisées directement
+            // depuis les pages HTML.
+            copyDirectory(
+                'Photos',
+                'Photos'
             );
         }
     };
@@ -53,9 +73,9 @@ function copyPagesPlugin() {
 // Configuration de Vite
 export default defineConfig({
 
-    // Copie les pages HTML après la construction Vite.
+    // Copie les ressources après la construction Vite.
     plugins: [
-        copyPagesPlugin()
+        copyStaticResourcesPlugin()
     ]
 
 });

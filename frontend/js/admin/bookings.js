@@ -526,7 +526,8 @@ async function loadBookings(date = null) {
     hideMessage();
 
     const url = new URL(
-        `${API_URL}/admin/bookings`
+        `${API_URL}/admin/bookings`,
+        window.location.origin
     );
 
     if (date) {
