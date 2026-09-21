@@ -71,7 +71,7 @@ final class SecurityController
                     property: 'password',
                     type: 'string',
                     format: 'password',
-                    example: 'motdepasse123'
+                    example: 'Motdepasse123!'
                 ),
                 new OA\Property(
                     property: 'guestNumber',
@@ -120,6 +120,13 @@ final class SecurityController
                     )
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
+        }
+
+        // Vérifie que le mot de passe respecte les règles de sécurité.
+        if (!$this->isPasswordSecure($data['password'])) {
+            return new JsonResponse([
+                'message' => 'Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, un chiffre et un caractère spécial.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         // Vérifie si l'adresse e-mail est déjà utilisée.
@@ -190,7 +197,6 @@ final class SecurityController
         ], JsonResponse::HTTP_CREATED);
     }
 
-
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
     #[OA\Get(
         path: '/api/me',
@@ -232,7 +238,6 @@ final class SecurityController
             'roles' => $user->getRoles(),
         ]);
     }
-
 
     #[Route('/api/me', name: 'api_me_update', methods: ['PATCH'])]
     #[OA\Patch(
@@ -379,7 +384,6 @@ final class SecurityController
         ]);
     }
 
-
     #[Route('/api/me/password', name: 'api_me_password_update', methods: ['PATCH'])]
     #[OA\Patch(
         path: '/api/me/password',
@@ -423,7 +427,7 @@ final class SecurityController
                     property: 'newPassword',
                     type: 'string',
                     format: 'password',
-                    example: 'nouveauMotDePasse123'
+                    example: 'NouveauMotDePasse123!'
                 ),
             ]
         )
@@ -479,10 +483,10 @@ final class SecurityController
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
-        // Vérifie que le nouveau mot de passe respecte une longueur minimale.
-        if (strlen($newPassword) < 8) {
+        // Vérifie que le nouveau mot de passe respecte les règles de sécurité.
+        if (!$this->isPasswordSecure($newPassword)) {
             return new JsonResponse([
-                'message' => 'Le nouveau mot de passe doit contenir au moins 8 caractères.'
+                'message' => 'Le nouveau mot de passe doit contenir au moins 8 caractères, dont une majuscule, un chiffre et un caractère spécial.',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
@@ -513,7 +517,6 @@ final class SecurityController
             'message' => 'Mot de passe modifié avec succès.'
         ], JsonResponse::HTTP_OK);
     }
-
 
     #[Route('/api/me', name: 'api_me_delete', methods: ['DELETE'])]
     #[OA\Delete(
@@ -553,5 +556,16 @@ final class SecurityController
 
         // Confirme la suppression du compte.
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Vérifie que le mot de passe respecte les règles de sécurité.
+     */
+    private function isPasswordSecure(string $password): bool
+    {
+        return strlen($password) >= 8
+            && preg_match('/[A-Z]/', $password) === 1
+            && preg_match('/[0-9]/', $password) === 1
+            && preg_match('/[^A-Za-z0-9]/', $password) === 1;
     }
 }
