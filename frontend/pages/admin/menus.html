@@ -1,0 +1,134 @@
+<section class="page-hero">
+    <h1>Gestion des menus</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Menus
+        </h2>
+
+        <p>
+            Créez et gérez les menus proposés par le restaurant.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h3 class="h5 mb-4">
+                Ajouter un menu
+            </h3>
+
+            <form id="menu-add-form">
+
+                <div class="mb-3">
+                    <label
+                        for="menu-title"
+                        class="form-label"
+                    >
+                        Nom du menu
+                    </label>
+
+                    <input
+                        type="text"
+                        id="menu-title"
+                        class="form-control"
+                        maxlength="150"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="menu-description"
+                        class="form-label"
+                    >
+                        Description
+                    </label>
+
+                    <textarea
+                        id="menu-description"
+                        class="form-control"
+                        rows="4"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="menu-price"
+                        class="form-label"
+                    >
+                        Prix
+                    </label>
+
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            id="menu-price"
+                            class="form-control"
+                            min="0.01"
+                            step="0.01"
+                            required
+                        >
+
+                        <span class="input-group-text">
+                            €
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="menu-foods"
+                        class="form-label"
+                    >
+                        Plats du menu
+                    </label>
+
+                    <select
+                        id="menu-foods"
+                        class="form-select"
+                        multiple
+                        size="6"
+                        required
+                    ></select>
+
+                    <div class="form-text">
+                        Maintenez Ctrl ou Cmd pour sélectionner
+                        plusieurs plats.
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Ajouter le menu
+                </button>
+
+            </form>
+
+            <div
+                id="menu-add-message"
+                class="mt-3"
+                role="alert"
+            ></div>
+
+        </div>
+    </div>
+
+    <div
+        id="menus-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div
+        id="menus-container"
+        class="row g-4"
+    ></div>
+
+</section>

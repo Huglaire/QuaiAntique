@@ -1,0 +1,86 @@
+<section class="page-hero">
+    <h1>Connexion</h1>
+</section>
+
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <h2 class="text-primary">
+                            Se connecter
+                        </h2>
+
+                        <p class="mb-0">
+                            Connectez-vous à votre compte pour accéder
+                            à vos réservations.
+                        </p>
+                    </div>
+
+                    <form id="signin-form" novalidate>
+
+                        <div class="mb-3">
+                            <label
+                                for="email"
+                                class="form-label"
+                            >
+                                Adresse e-mail
+                            </label>
+
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                class="form-control"
+                                autocomplete="email"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="password"
+                                class="form-label"
+                            >
+                                Mot de passe
+                            </label>
+
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                class="form-control"
+                                autocomplete="current-password"
+                                required
+                            >
+                        </div>
+
+                        <div
+                            id="signin-error"
+                            class="alert alert-danger d-none"
+                            role="alert"
+                        ></div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+                            Se connecter
+                        </button>
+
+                    </form>
+
+                    <p class="text-center mt-4 mb-0">
+                        Vous n'avez pas encore de compte ?
+                        <a href="/inscription">
+                            Créer un compte
+                        </a>
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

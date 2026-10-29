@@ -1,0 +1,58 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Quai Antique API
+            description: API de l'application Quai Antique par Hugo Pollon
+            version: 1.0.0
+
+        components:
+            securitySchemes:
+                bearerAuth:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+
+        paths:
+            /api/login_check:
+                post:
+                    tags:
+                        - Authentification et compte
+                    summary: Se connecter
+                    description: Authentifie un utilisateur avec son adresse e-mail et son mot de passe et retourne un token JWT.
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required:
+                                        - email
+                                        - password
+                                    properties:
+                                        email:
+                                            type: string
+                                            format: email
+                                            example: hugo@example.fr
+                                        password:
+                                            type: string
+                                            format: password
+                                            example: motdepasse123
+                    responses:
+                        '200':
+                            description: Authentification réussie. Retourne un token JWT.
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            token:
+                                                type: string
+                                                description: Token JWT permettant d'accéder aux endpoints protégés.
+                                                example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+                        '401':
+                            description: Identifiants incorrects.
+
+    areas:
+        default:
+            path_patterns:
+                - '^/api(?!/doc$)'

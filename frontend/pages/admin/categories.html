@@ -1,0 +1,71 @@
+<section class="page-hero">
+    <h1>Gestion des catégories</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Catégories
+        </h2>
+
+        <p>
+            Créez et gérez les catégories des plats du restaurant.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h3 class="h5 mb-4">
+                Ajouter une catégorie
+            </h3>
+
+            <form id="category-add-form">
+
+                <div class="mb-3">
+                    <label
+                        for="category-name"
+                        class="form-label"
+                    >
+                        Nom de la catégorie
+                    </label>
+
+                    <input
+                        type="text"
+                        id="category-name"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Ajouter la catégorie
+                </button>
+
+            </form>
+
+            <div
+                id="category-add-message"
+                class="mt-3"
+                role="alert"
+            ></div>
+
+        </div>
+    </div>
+
+    <div
+        id="categories-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div
+        id="categories-container"
+        class="row g-4"
+    ></div>
+
+</section>

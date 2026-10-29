@@ -1,0 +1,131 @@
+<section class="page-hero">
+    <h1>Gestion des plats</h1>
+</section>
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+        <h2 class="text-primary">
+            Plats
+        </h2>
+
+        <p>
+            Créez et gérez les plats proposés à la carte du restaurant.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h3 class="h5 mb-4">
+                Ajouter un plat
+            </h3>
+
+            <form id="food-add-form">
+
+                <div class="mb-3">
+                    <label
+                        for="food-title"
+                        class="form-label"
+                    >
+                        Nom du plat
+                    </label>
+
+                    <input
+                        type="text"
+                        id="food-title"
+                        class="form-control"
+                        maxlength="150"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="food-description"
+                        class="form-label"
+                    >
+                        Description
+                    </label>
+
+                    <textarea
+                        id="food-description"
+                        class="form-control"
+                        rows="4"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="food-price"
+                        class="form-label"
+                    >
+                        Prix
+                    </label>
+
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            id="food-price"
+                            class="form-control"
+                            min="0.01"
+                            step="0.01"
+                            required
+                        >
+
+                        <span class="input-group-text">
+                            €
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="food-category"
+                        class="form-label"
+                    >
+                        Catégorie
+                    </label>
+
+                    <select
+                        id="food-category"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">
+                            Sélectionnez une catégorie
+                        </option>
+                    </select>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Ajouter le plat
+                </button>
+
+            </form>
+
+            <div
+                id="food-add-message"
+                class="mt-3"
+                role="alert"
+            ></div>
+
+        </div>
+    </div>
+
+    <div
+        id="foods-message"
+        class="alert d-none"
+        role="alert"
+    ></div>
+
+    <div
+        id="foods-container"
+        class="row g-4"
+    ></div>
+
+</section>
